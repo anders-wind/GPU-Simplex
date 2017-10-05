@@ -103,10 +103,9 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 	
 
 -- Simplex
-let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v : f32) : [n]f32 = 
+let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v : f32) = 
 	let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
-	in if e != -1
-	then
+	let (_,B,_,b,_,v,_) = loop (N,B,A,b,c,v,e) while e != -1 do 
 		let delta = map(\i -> if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
 		let l = 
 			reduce(\min l -> if min != -1 && delta[l] > delta[min] 
@@ -114,9 +113,10 @@ let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]
 				else l
 			) (-1) B
 		let (N,B,A,b,c,v) = pivot N B A b c v l e
-		in simplex N B A b c v 
-	else -- optimal solution  
-		map(\i -> if (contains i B) then b[i] else 0f32) (iota n)
+		let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
+		in (N,B,A,b,c,v,e)
+	in (v, map(\i -> if (contains i B) then b[i] else 0f32) (iota n))
 
-let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v:f32) : [n]f32 =
+let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v:f32) =
   simplex N B A b c v
+  
