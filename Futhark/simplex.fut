@@ -50,50 +50,51 @@ let index (i:i32) (j:i32) (size:i32) : i32 =
 
 -- SetContains
 let contains [n] (elem:i32)(list:[n]i32) : bool = 
-	reduce(\(i, pred) _> pred || i == elem ) elem
-
+	let index = reduce(\res i -> if list[i] == elem then i else res) (-1) (iota n)
+	in index != -1
 
 -- SetMinus
-let minus [n] (remove:i32)(list:[n]i32) : [n-1]i32 = 
+let minus [n] (remove:i32)(list:[n]i32) : []i32 = 
 	filter(\elem -> elem != remove) list
 
 -- SetAdd
-let add [n] (new:i32)(list:[n]i32) : [n+1]i32 = 
-	concat new list
+let add [n] (new:i32)(list:[n]i32) : []i32 = 
+	concat [new] list
 
 -- Pivot
-let pivot [n][m] (N : [n]i32) (B : [m]i32) (A [n+m]) (b:[m]i32) (c:[n]i32) (v:i32) : [n] = 
+let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v:f32) (l:i32) (e:i32) = 
 	-- generate the new variables
-	let NHat = N
-	let BHat = B
-	let AHat = A
-	let bHat = b
-	let cHat = c
-	let vHat = v
-	-- the algorithm
+	let AHat : *[npm][npm]f32 = replicate npm (replicate npm 0f32)
+	let bHat = replicate npm 0f32
 
 	-- Compute coefficients of the equation for new basic variables
-	let bHat = write bHat (replicate e 1) (replicate (b[l]/a[l][e]) 1) -- write bHat[e]
-	let AHat = write AHat (replicate e m, N) 
-		(map(\j -> if(j!=e) 
-			then A[l][j] / A[l][e] 
-			else 1/A[l][e]) 
-		N)
+	let bHat[e] = (b[l]/A[l, e]) 
+
+	let vals = (map(\j -> if j != e 
+					then A[l, j] / A[l, e] 
+					else 1f32/A[l, e]) 
+				N)
+	let AHat[e] = scatter (replicate npm 0f32) N vals -- not neccesary to give AHat[e] as argument to scatter since its 0 anyways.
+		
 
 	-- Compute coefficients of the remaining constraints
-	let bHat = map(\i -> b[i]-A[i][e]*bHat[e]) (minus l B) -- line 9
-	let AHat = 
-		map(\i j -> if j != e 
-			then A[i][j] - A[i][j] * AHat[e][j] 
-			else -A[i][e] * AHat[e][j]) 
-		(minus l B) (minus e N) -- line 10-12
+	let bHat = map(\i -> b[i]-A[i, e] * bHat[e]) (minus l B) -- line 9
+	let AHat = map(\i -> 
+		if contains i B && i != l 
+		then  
+			map(\j -> if contains j N && j != e 
+				then A[i, j] - A[i, e] * AHat[e, j] 
+				else 
+					if j == l then -A[i, e] * AHat[e, l] else AHat[i, j]
+			) (iota npm)
+		else 
+			AHat[i]
+	) (iota npm)
+
 	-- Compute the objective function
 	let vHat = v + c[e] * bHat[e] -- line 14
 	let cHat = 
-		map(\j -> if j != e 
-			then c[j]-c[e] * aHat[e][j] 
-			else -c[e] * aHat[e][l]) 
-		N -- line 15-17
+		map(\j -> if j != e then c[j] - c[e] * AHat[e, j] else (-c[e]) * AHat[e, l]	) N -- line 15-17
 
 	-- Compute the new sets of basic and non-basic variables.
 	let NHat = add l (minus e N)
@@ -102,16 +103,20 @@ let pivot [n][m] (N : [n]i32) (B : [m]i32) (A [n+m]) (b:[m]i32) (c:[n]i32) (v:i3
 	
 
 -- Simplex
-let simplex [n][m] (N : [n]i32) (B : [m]i32) (A [n+m][n+m]) (b:[m]i32) (c:[n]i32) (v:i32) : [n]:i32 = 
-	if reduce(\j res -> c[j] > 0 || res) false N
+let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v : f32) : [n]f32 = 
+	let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
+	in if e != -1
 	then
-		let e = reduce(\j e -> if e!=-1 && c[e] > 0 then e else c[j]) (-1) N
-		let delta = map(\i -> if A[i][e] > 0 then b[i]/a[i][e] else i32.inf) B
-		let l = reduce(\l min -> if min!=-1 && delta[l] > delta[min] then min else l) -1 B
-		in simplex (pivot N B A b c v l e) 
+		let delta = map(\i -> if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
+		let l = 
+			reduce(\min l -> if min != -1 && delta[l] > delta[min] 
+				then min 
+				else l
+			) (-1) B
+		let (N,B,A,b,c,v) = pivot N B A b c v l e
+		in simplex N B A b c v 
 	else -- optimal solution  
-		map(\i -> if (contains i B) then b[i] else 0) (iota n)
+		map(\i -> if (contains i B) then b[i] else 0f32) (iota n)
 
-let main [n][m] (N : [n]i32) (B : [m]i32) (A [n+m][n+m]) (b:[m]i32) (c:[n]i32) (v:i32)
-  : [n]i32 =
+let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v:f32) : [n]f32 =
   simplex N B A b c v
