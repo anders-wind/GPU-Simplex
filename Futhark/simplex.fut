@@ -48,7 +48,7 @@ let contains [n] (elem:i32)(list:[n]i32) : bool =
 
 -- SetMinus
 let minus [n] (remove:i32)(list:[n]i32) : [n-1]i32 = 
-	filter(\elem -> elem != remove) list -- fjerner filter alt der er sandt eller alt der er falsk.
+	filter(\elem -> elem != remove) list
 
 -- SetAdd
 let add [n] (new:i32)(list:[n]i32) : [n+1]i32 = 
@@ -66,17 +66,29 @@ let pivot [n][m] (N : [n]i32) (B : [m]i32) (A [n+m]) (b:[m]i32) (c:[n]i32) (v:i3
 	-- the algorithm
 
 	-- Compute coefficients of the equation for new basic variables
-	let bHat = write bHat [e] [b[l]/a[l][e]] -- write bHat[e]
+	let bHat = write bHat (replicate e 1) (replicate (b[l]/a[l][e]) 1) -- write bHat[e]
 	let AHat = write AHat (replicate e m, N) 
 		(map(\j -> if(j!=e) 
 			then A[l][j] / A[l][e] 
-			else 1/A[l][e]) N)
+			else 1/A[l][e]) 
+		N)
 
 	-- Compute coefficients of the remaining constraints
 	let bHat = map(\i -> b[i]-A[i][e]*bHat[e]) (minus l B) -- line 9
-	let AHat = map(\(i,j) -> if j != e then A[i][j] - A[i][j] * AHat[e][j] else -A[i][e]*AHat[e][j]) (minus l B) (minus e N) -- line 10-12
-	let vHat = v + c[e]*bHat[e] -- line 14
-	let cHat = map(\j -> if(j!=e) then c[j]-c[e] * aHat[e][j] else -c[e] * aHat[e][l]) N -- line 15-17
+	let AHat = 
+		map(\i j -> if j != e 
+			then A[i][j] - A[i][j] * AHat[e][j] 
+			else -A[i][e] * AHat[e][j]) 
+		(minus l B) (minus e N) -- line 10-12
+	-- Compute the objective function
+	let vHat = v + c[e] * bHat[e] -- line 14
+	let cHat = 
+		map(\j -> if j != e 
+			then c[j]-c[e] * aHat[e][j] 
+			else -c[e] * aHat[e][l]) 
+		N -- line 15-17
+
+	-- Compute the new sets of basic and non-basic variables.
 	let NHat = add l (minus e N)
 	let BHat = add e (minus l B)
 	in (NHat, BHat, AHat, bHat, cHat, vHat) 
