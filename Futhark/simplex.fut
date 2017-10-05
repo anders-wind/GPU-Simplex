@@ -1,11 +1,18 @@
--- ASSIGNMENT 2: Flat-Parallel implementation of Sparse Matrix-Vector Multiplication
+-- Implementation of Simplex
 -- ==
--- compiled input { 
---   [0,   1,     0,   1,    2,    1,   2,    3,    2,   3,   3  ]
---   [2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0, 3.0]
---   [2, 3, 3, 2, 1]
---   [2.0, 1.0, 0.0, 3.0]
--- } 
+-- compiled input {
+--   [0, 1, 2]
+--   [3 ,4, 5]
+--   [ [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+--   , [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+--   , [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+--   , [1.0, 2.0, 3.0, 0.0, 0.0, 0.0]
+--   , [2.0, 2.0, 5.0, 0.0, 0.0, 0.0]
+--   , [4.0, 1.0, 2.0, 0.0, 0.0, 0.0]]
+--   [0.0, 0.0, 0.0, 30.0, 24.0, 36.0]
+--   [3,0, 1.0, 2.0, 0.0, 0.0, 0.0]
+--   0.0
+-- }
 -- output { [3.0f32, 0.0f32, -4.0f32, 6.0f32, 9.0f32] }
 
 default(i32)
@@ -93,10 +100,6 @@ let simplex [n][m] (N : [n]i32) (B : [m]i32) (A [n+m][n+m]) (b:[m]i32) (c:[n]i32
 	else -- optimal solution  
 		map(\i -> if (contains i B) then b[i] else 0) (iota n)
 
-
--- One may run with for example:
--- $ futhark-dataset --i32-bounds=0:9999 -g [1000000]i32 --f32-bounds=-7.0:7.0 -g [1000000]f32 --i32-bounds=100:100 -g [10000]i32 --f32-bounds=-10.0:10.0 -g [10000]f32 | ./spMVmult-seq -t /dev/stderr > /dev/null
-let main [n] [m] 
-         (mat_inds : [n]i32) (mat_vals : [n]f32) 
-         (shp : [m]i32) (vct : []f32) : [m]f32 =
-  spMatVctMult (zip mat_inds mat_vals) shp vct
+let main [n][m] (N : [n]i32) (B : [m]i32) (A [n+m][n+m]) (b:[m]i32) (c:[n]i32) (v:i32)
+  : [n]i32 =
+  simplex N B A b c v
