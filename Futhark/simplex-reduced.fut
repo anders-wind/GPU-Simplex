@@ -67,18 +67,16 @@ let entering_variable [n] (c : [n]f32) : i32 =
 
 let leaving_variable [n] [m] (A : [m][n]f32) (b : [m]f32) (e : i32) : i32 =
   let delta = map (\Arow bcon -> if Arow[e] > 0f32 then bcon/Arow[e] else inf) A b
-  let l =
-    reduce
-       (\min l -> if delta[l] < delta[min] then l else min)
-       0
+  in reduce
+       (\min l -> if min != -1 && delta[l] > delta[min] then min else l)
+       (-1)
        (iota m)
-  in if delta[l] == inf then -1 else l
 
 let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
   let e = entering_variable c
   let (_,b,_,v,_) = loop (A,b,c,v,e) while e != -1 do
     let l = leaving_variable A b e
-    -- should have a check for if l == inf here, but it will throw out of
+    -- should have a check for if l == -1 here, but it will throw out of
     -- bounds error if not, so that'll do as our "Unbounded" result for now
     let (A,b,c,v) = pivot A b c v l e
     let e = entering_variable c
