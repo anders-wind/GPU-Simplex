@@ -65,8 +65,7 @@ def simplex(N, B, A, b, c, v):
         return(b, v)
     lvar = get_leaving_variable(B,A,b,evar)
     if lvar == None:
-        print "Unbounded"
-        return
+        return None
     (N_, B_, A_, b_, c_, v_) = pivot(N,B,A,b,c,v,lvar,evar)
     return simplex(N_, B_, A_, b_, c_, v_)
 
@@ -86,8 +85,12 @@ def main():
     c = [3.0,1.0,2.0,0.0,0.0,0.0]
     v = 0.0
 
-    (sol, obj) = simplex(N,B,A,b,c,v)
-    print ("Solution: " + str(sol))
-    print ("Objective value: " + str(obj))
+    res = simplex(N,B,A,b,c,v)
+    if res == None:
+        print "Unbounded"
+    else:
+        (sol, obj) = res
+        print ("Solution: " + str(sol))
+        print ("Objective value: " + str(obj))
 
 main()
