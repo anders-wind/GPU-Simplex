@@ -32,6 +32,9 @@
 *.app
 *.bin
 Futhark/*.c
+Futhark/*-c
+Futhark/*-opencl
 
-# Specific Executables
-Futhark/simplex
+# test files
+*actual*
+*expected*
