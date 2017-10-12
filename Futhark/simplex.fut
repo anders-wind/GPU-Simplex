@@ -70,7 +70,7 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 	-- Compute coefficients of the equation for new basic variables
 	let bHat[e] = (b[l]/A[l, e])
 
-	let vals = (map(\j -> if j != e
+	let vals = (map(\j -> unsafe if j != e
 					then A[l, j] / A[l, e]
 					else 1f32/A[l, e])
 				N)
@@ -78,11 +78,11 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 
 
 	-- Compute coefficients of the remaining constraints
-	let bHat = map(\i -> b[i]-A[i, e] * bHat[e]) (minus l B) -- line 9
+	let bHat = map(\i -> unsafe (b[i]-A[i, e] * bHat[e])) (minus l B) -- line 9
 	let AHat = map(\i ->
 		if contains i B && i != l
 		then
-			map(\j -> if contains j N && j != e
+			map(\j -> unsafe if contains j N && j != e
 				then A[i, j] - A[i, e] * AHat[e, j]
 				else
 					if j == l then -A[i, e] * AHat[e, l] else AHat[i, j]
@@ -93,7 +93,7 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 
 	-- Compute the objective function
 	let vHat = v + c[e] * bHat[e] -- line 14
-	let cHat = map(\j -> if j != e
+	let cHat = map(\j -> unsafe if j != e
 		then c[j] - c[e] * AHat[e, j]
 		else (-c[e]) * AHat[e, l]	) N -- line 15-17
 
@@ -104,18 +104,18 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 
 -- Simplex
 let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v : f32) =
-	let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
+	let e = reduce(\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
 	let (_,B,_,b,_,v,_) = loop (N,B,A,b,c,v,e) while e != -1 do
-		let delta = map(\i -> if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
+		let delta = map(\i -> unsafe if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
 		let l =
-			reduce(\min l -> if min != -1 && delta[l] > delta[min]
+			reduce(\min l -> unsafe if min != -1 && delta[l] > delta[min]
 				then min
 				else l
 			) (-1) B
 		let (N,B,A,b,c,v) = pivot N B A b c v l e
-		let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
+		let e = reduce(\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
 		in (N,B,A,b,c,v,e)
-	in (v, map(\i -> if (contains i B) then b[i] else 0f32) (iota n))
+	in (v, map(\i -> unsafe if (contains i B) then b[i] else 0f32) (iota n))
 
 let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v:f32) =
   simplex N B A b c v
