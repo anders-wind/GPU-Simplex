@@ -10,7 +10,7 @@
 --   , [2.0, 2.0, 5.0, 0.0, 0.0, 0.0]
 --   , [4.0, 1.0, 2.0, 0.0, 0.0, 0.0]]
 --   [0.0, 0.0, 0.0, 30.0, 24.0, 36.0]
---   [3,0, 1.0, 2.0, 0.0, 0.0, 0.0]
+--   [3.0, 1.0, 2.0, 0.0, 0.0, 0.0]
 --   0.0
 -- }
 -- output { [3.0f32, 0.0f32, -4.0f32, 6.0f32, 9.0f32] }
@@ -93,8 +93,9 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 
 	-- Compute the objective function
 	let vHat = v + c[e] * bHat[e] -- line 14
-	let cHat =
-		map(\j -> if j != e then c[j] - c[e] * AHat[e, j] else (-c[e]) * AHat[e, l]	) N -- line 15-17
+	let cHat = map(\j -> if j != e 
+		then c[j] - c[e] * AHat[e, j] 
+		else (-c[e]) * AHat[e, l]	) N -- line 15-17
 
 	-- Compute the new sets of basic and non-basic variables.
 	let NHat = add l (minus e N)
@@ -102,7 +103,7 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 	in (NHat, BHat, AHat, bHat, cHat, vHat)
 
 -- Simplex
-let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
+let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v : f32) =
 	let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
 	let (_,B,_,b,_,v,_) = loop (N,B,A,b,c,v,e) while e != -1 do 
 		let delta = map(\i -> if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
@@ -116,6 +117,6 @@ let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]
 		in (N,B,A,b,c,v,e)
 	in (v, map(\i -> if (contains i B) then b[i] else 0f32) (iota n))
 
-let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [m]f32) (c : [n]f32) (v:f32) =
+let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v:f32) =
   simplex N B A b c v
   
