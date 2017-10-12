@@ -93,8 +93,8 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 
 	-- Compute the objective function
 	let vHat = v + c[e] * bHat[e] -- line 14
-	let cHat = map(\j -> if j != e 
-		then c[j] - c[e] * AHat[e, j] 
+	let cHat = map(\j -> if j != e
+		then c[j] - c[e] * AHat[e, j]
 		else (-c[e]) * AHat[e, l]	) N -- line 15-17
 
 	-- Compute the new sets of basic and non-basic variables.
@@ -105,7 +105,7 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 -- Simplex
 let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v : f32) =
 	let e = reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
-	let (_,B,_,b,_,v,_) = loop (N,B,A,b,c,v,e) while e != -1 do 
+	let (_,B,_,b,_,v,_) = loop (N,B,A,b,c,v,e) while e != -1 do
 		let delta = map(\i -> if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
 		let l =
 			reduce(\min l -> if min != -1 && delta[l] > delta[min]
@@ -119,4 +119,3 @@ let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [np
 
 let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v:f32) =
   simplex N B A b c v
-  
