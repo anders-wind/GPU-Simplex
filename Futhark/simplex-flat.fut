@@ -94,7 +94,7 @@ let pivot [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b : 
 						else
 							if j == l then -A[i*npm + e] * AHat[e*npm + l] else AHat[i*npm + j]
 				else
-					AHat[i*npm]) 
+					AHat[i*npm+j])
 		(iota npmsq)
 
 	-- Compute the objective function

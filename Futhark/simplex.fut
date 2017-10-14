@@ -13,7 +13,7 @@
 --   [3.0, 1.0, 2.0, 0.0, 0.0, 0.0]
 --   0.0
 -- }
--- output { [3.0f32, 0.0f32, -4.0f32, 6.0f32, 9.0f32] }
+-- output { 28.0f32 }
 
 default(i32)
 default(f32)
@@ -66,19 +66,17 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 	-- generate the new variables
 	let AHat : *[npm][npm]f32 = replicate npm (replicate npm 0f32)
 	let bHat = replicate npm 0f32
+	let cHat = replicate npm 0f32
 
 	-- Compute coefficients of the equation for new basic variables
 	let bHat[e] = (b[l]/A[l, e])
 
-	let vals = (map(\j -> unsafe if j != e
-					then A[l, j] / A[l, e]
-					else 1f32/A[l, e])
-				N)
+	let vals = map(\j -> unsafe if j != e then A[l, j] / A[l, e] else 1f32/A[l, e]) N
 	let AHat[e] = scatter (replicate npm 0f32) N vals -- not neccesary to give AHat[e] as argument to scatter since its 0 anyways.
 
-
 	-- Compute coefficients of the remaining constraints
-	let bHat = map(\i -> unsafe (b[i]-A[i, e] * bHat[e])) (minus l B) -- line 9
+	let bvals = map (\i -> unsafe if i != l	then b[i]-A[i,e] * bHat[e] else 0f32) B
+	let bHat = scatter bHat B bvals -- line 9
 	let AHat = map(\i ->
 		if contains i B && i != l
 		then
@@ -93,9 +91,9 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 
 	-- Compute the objective function
 	let vHat = v + c[e] * bHat[e] -- line 14
-	let cHat = map(\j -> unsafe if j != e
-		then c[j] - c[e] * AHat[e, j]
-		else (-c[e]) * AHat[e, l]	) N -- line 15-17
+	let cHat[l] = -c[e] * AHat[e,l]
+	let cvals = map (\j -> unsafe if j != e then c[j] - c[e] * AHat[e, j] else 0f32) N
+	let cHat = scatter (replicate npm 0f32) N cvals -- line 15-17
 
 	-- Compute the new sets of basic and non-basic variables.
 	let NHat = add l (minus e N)
@@ -106,7 +104,7 @@ let pivot [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]
 let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v : f32) =
 	let e = reduce(\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
 	let (_,B,_,b,_,v,_) = loop (N,B,A,b,c,v,e) while e != -1 do
-		let delta = map(\i -> unsafe if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) B
+		let delta = map(\i -> unsafe if A[i, e] > 0f32 then b[i]/A[i, e] else 1000000f32) (iota npm)
 		let l =
 			reduce(\min l -> unsafe if min != -1 && delta[l] > delta[min]
 				then min
@@ -118,4 +116,4 @@ let simplex [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [np
 	in (v, map(\i -> unsafe if (contains i B) then b[i] else 0f32) (iota n))
 
 let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v:f32) =
-  simplex N B A b c v
+  let (obj, _) = simplex N B A b c v in obj
