@@ -32,7 +32,10 @@
 *.app
 *.bin
 Futhark/*.c
+Futhark/*-c
+Futhark/*-opencl
 
+<<<<<<< HEAD
 # Specific Executables
 Futhark/simplex
 
@@ -87,3 +90,8 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+
+# test files
+*actual*
+*expected*

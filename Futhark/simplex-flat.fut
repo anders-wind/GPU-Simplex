@@ -72,7 +72,7 @@ let pivot [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b : 
 	let be = (b[l]/A[l*npm + e])
 	let bHat[e] = be
 
-	let vals = (map(\j -> if j != e
+	let vals = (map(\j -> unsafe if j != e
 					then A[l*npm + j] / A[l*npm + e]
 					else 1f32/A[l*npm + e])
 				N)
@@ -80,11 +80,12 @@ let pivot [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b : 
 	let AHat = scatter AHat (map(\i -> e*npm + i) N) vals
 
 	-- Compute coefficients of the remaining constraints
-	let bHat = scatter bHat (minus l B) (map(\i -> b[i]-A[i*npm + e] * be) (minus l B)) -- line 9
+	let bHat = scatter bHat (minus l B) (map(\i -> unsafe (b[i]-A[i*npm + e] * be)) (minus l B)) -- line 9
 
 	let AHat = 
 		map(\full ->
-			let i = full / npm 
+			unsafe
+			let i = full / npm
 			let j = full % npm
 			in  if contains i B && i != l
 				then
@@ -93,13 +94,13 @@ let pivot [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b : 
 						else
 							if j == l then -A[i*npm + e] * AHat[e*npm + l] else AHat[i*npm + j]
 				else
-					AHat[i*npm]) 
+					AHat[i*npm+j])
 		(iota npmsq)
 
 	-- Compute the objective function
 	let vHat = v + c[e] * bHat[e] -- line 14
 	let cHat = scatter cHat (minus e N) 
-		(map(\j -> c[j] - c[e] * AHat[e*npm + j]) (minus e N))
+		(map(\j -> unsafe (c[j] - c[e] * AHat[e*npm + j])) (minus e N))
 	
 	let cHat[l] = (-c[e]) * AHat[e*npm + l]
 
@@ -110,14 +111,14 @@ let pivot [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b : 
 
 
 let findLeaving [m] [npm] [npmsq] (B : [m]i32) (A : [npmsq]f32) (b : [npm]f32) (e:i32) : i32 =
-	let delta = map(\i -> if A[i*npm + e] > 0f32 then b[i]/A[i*npm + e] else 1000000f32) (iota npm)
-	in 	reduce(\min l -> if min != -1 && delta[l] > delta[min]
+	let delta = map(\i -> unsafe if A[i*npm + e] > 0f32 then b[i]/A[i*npm + e] else 1000000f32) (iota npm)
+	in 	reduce(\min l -> unsafe if min != -1 && delta[l] > delta[min]
 			then min
 			else l
 		) (-1) B
 
 let findEntering [n] [npm] (N : [n]i32) (c : [npm]f32) : i32 = 
-	reduce(\res j -> if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
+	reduce(\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1) (-1) N
 
 -- Simplex
 let simplex [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b : [npm]f32) (c : [npm]f32) (v : f32) =
@@ -131,11 +132,11 @@ let simplex [n] [m] [npm] [npmsq] (N : [n]i32) (B : [m]i32) (A : [npmsq]f32) (b 
 			let (N,B,A,b,c,v) = pivot N B A b c v l e
 			let e = findEntering N c
 			in (N,B,A,b,c,v,e)
-	in (v, map(\i -> if (contains i B) then b[i] else 0f32) (iota n))
+	in (v, map(\i -> unsafe if (contains i B) then b[i] else 0f32) (iota n))
 
 let main [n] [m] [npm] (N : [n]i32) (B : [m]i32) (A : [npm][npm]f32) (b : [npm]f32) (c : [npm]f32) (v:f32) =
 	let flatA = 
-		map(\full -> 
+		map(\full -> unsafe
 			let i = full / npm
 			let j = full % npm
 			in A[i, j]) (iota (npm*npm))
