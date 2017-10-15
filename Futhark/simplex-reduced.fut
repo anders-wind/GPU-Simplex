@@ -73,16 +73,25 @@ let leaving_variable [n] [m] (A : [m][n]f32) (b : [m]f32) (e : i32) : i32 =
        (-1)
        (iota m)
 
+let swap [mpn] (p : *[mpn]i32) (e : i32) (l : i32) =
+  let tmp = p[e] in let p[e] = p[l] in let p[l] = tmp in p
+
+let extract [m] (p : [m]i32) (b : [m]f32) (n:i32) =
+  let mapped = map (\i -> if i < m then i else -1) p
+  in scatter (replicate n 0f32) mapped b
+
 let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
+  let p = iota (m+n) -- b variables on n to m-1.
   let e = entering_variable c
-  let (_,b,_,v,_) = loop (A,b,c,v,e) while e != -1 do
+  let (_,b,_,v,_,p) = loop (A,b,c,v,e,p) while e != -1 do
     let l = leaving_variable A b e
     -- should have a check for if l == -1 here, but it will throw out of
     -- bounds error if not, so that'll do as our "Unbounded" result for now
+    let p = swap p e (l+n)
     let (A,b,c,v) = pivot A b c v l e
     let e = entering_variable c
-    in (A,b,c,v,e)
-  in (v, b)
+    in (A,b,c,v,e,p)
+  in (v, extract (p[n:m+n]) b n)
 
 let main [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) : f32 =
   let (obj, _) = simplex A b c v in obj
