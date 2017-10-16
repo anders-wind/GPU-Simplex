@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class Program {
 
     /***
@@ -14,11 +17,19 @@ public class Program {
         try{
             int variableNumber = Integer.parseInt(args[0]);
             int constraintNumber = Integer.parseInt(args[1]);
+            int numberOfInstances = 1;
+            if(args.length>2)
+                numberOfInstances = Integer.parseInt(args[2]);
 
             InstanceGenerator instanceGenerator = new InstanceGenerator();
-            SimplexInstance simplexInstance = instanceGenerator.generate(variableNumber, constraintNumber);
+            List<SimplexInstance> instances = new ArrayList<>();
+            for (int i = 0; i < numberOfInstances; i++) {
+                instances.add(instanceGenerator.generate(variableNumber, constraintNumber));
+            }
 
-            System.out.println(simplexInstance);
+            for (SimplexInstance instance : instances) {
+                System.out.println(instance);
+            }
         }
         catch (NumberFormatException e) {
             System.err.println("Arguments were not integers");
