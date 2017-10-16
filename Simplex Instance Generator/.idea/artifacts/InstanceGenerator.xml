@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="InstanceGenerator">
+    <output-path>$PROJECT_DIR$/out/artifacts/InstanceGenerator</output-path>
+    <root id="archive" name="InstanceGenerator.jar">
+      <element id="module-output" name="Simplex Instance Generator" />
+      <element id="extracted-dir" path="C:/Program Files/IBM/ILOG/CPLEX_Studio1271/cplex/lib/cplex.jar" path-in-jar="/" />
+      <element id="library" level="project" name="cplex" />
+    </root>
+  </artifact>
+</component>

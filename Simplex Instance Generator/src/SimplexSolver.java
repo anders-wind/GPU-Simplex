@@ -12,6 +12,7 @@ public class SimplexSolver {
         int variableNumber = instance.getVariableNumber(), constraintNumber = instance.getConstrainNumber();
         try {
             IloCplex cplex = new IloCplex();
+            cplex.setOut(null);
             IloNumVar[] x =  cplex.boolVarArray(variableNumber);
 
             // Add the objective function
