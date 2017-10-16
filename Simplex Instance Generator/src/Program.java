@@ -1,9 +1,15 @@
 public class Program {
-    
+
+    /***
+     * Expects two integers in args as input.
+     * Prints coefficients, constants, constraints, initial objective value, expected objective value.
+     * @param args
+     */
     public static void main(String[] args){
         if(args.length<2)
         {
             System.err.println("Provide two arguments, number of variables and number of constraints");
+            return;
         }
         try{
             int variableNumber = Integer.parseInt(args[0]);

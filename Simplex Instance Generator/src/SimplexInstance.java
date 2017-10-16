@@ -1,18 +1,18 @@
 import java.util.Arrays;
 
 public class SimplexInstance {
-    final double[][] constraints;
-    final double[] coefficients;
-    final double[] constants;
-    final double initialObjective;
-    private double expectedObjective;
+    final float[][] constraints;
+    final float[] coefficients;
+    final float[] constants;
+    final float initialObjective;
+    private float expectedObjective;
 
-    public SimplexInstance(double[][] constraints, double initialObjective, double[] coefficients, double[] constants, double expectedObjective) {
+    public SimplexInstance(float[][] constraints, float initialObjective, float[] coefficients, float[] constants, float expectedObjective) {
         this(constraints, initialObjective, coefficients, constants);
         this.expectedObjective = expectedObjective;
     }
 
-    SimplexInstance(double[][] constraints, double initialObjective, double[] coefficients, double[] constants) {
+    SimplexInstance(float[][] constraints, float initialObjective, float[] coefficients, float[] constants) {
         this.constraints = constraints;
         this.initialObjective = initialObjective;
         this.coefficients = coefficients;
@@ -27,25 +27,27 @@ public class SimplexInstance {
         return constants.length;
     }
 
-    public double getExpectedObjective() {
+    public float getExpectedObjective() {
         return expectedObjective;
     }
 
-    void setExpectedObjective(double expectedObjective) {
+    void setExpectedObjective(float expectedObjective) {
         this.expectedObjective = expectedObjective;
     }
 
 
     @Override
     public String toString() {
-        String constraintString = "[";
-        for (double[] constraint : constraints) {
-            constraintString += Arrays.toString(constraint) + ", ";
+        StringBuilder constraintString = new StringBuilder("[");
+        for (int i = 0; i < constraints.length; i++) {
+            constraintString.append(Arrays.toString(constraints[i]));
+            if(i < constraints.length-1)
+                constraintString.append(", ");
         }
-        constraintString += "]";
-        return  constraintString + " " +
-                Arrays.toString(coefficients) + " " +
+        constraintString.append("]");
+        return  Arrays.toString(coefficients) + " " +
                 Arrays.toString(constants) + " " +
+                constraintString + " " +
                 initialObjective + " " +
                 expectedObjective;
     }

@@ -3,10 +3,12 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
+import static ilog.cplex.IloCplex.CplexStatus.Infeasible;
+
 public class SimplexSolver {
 
-    public double solveSimplex(SimplexInstance instance) {
-        double expectedObjective = instance.initialObjective;
+    public float solveSimplex(SimplexInstance instance) {
+        float expectedObjective = instance.initialObjective;
         int variableNumber = instance.getVariableNumber(), constraintNumber = instance.getConstrainNumber();
         try {
             IloCplex cplex = new IloCplex();
@@ -17,7 +19,7 @@ public class SimplexSolver {
             for (int i = 0; i < variableNumber; i++) {
                 obj.addTerm(instance.coefficients[i], x[i]);
             }
-            cplex.addMaximize();
+            cplex.addMaximize(obj);
 
             // Add the constraints
             IloLinearNumExpr expr;
@@ -32,7 +34,11 @@ public class SimplexSolver {
             // Solve the formulation
             boolean solved = cplex.solve();
             if(solved){
-                expectedObjective += cplex.getBestObjValue();
+                if(cplex.getCplexStatus().equals(IloCplex.CplexStatus.Infeasible))
+                    System.err.println("Was infeasible");
+                else if(cplex.getCplexStatus().equals(IloCplex.CplexStatus.Unbounded))
+                    System.err.println("Was unbounded");
+                expectedObjective += cplex.getObjValue();
             }
 
         } catch (IloException e) {
