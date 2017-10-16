@@ -4,6 +4,9 @@
     <root id="archive" name="InstanceGenerator.jar">
       <element id="module-output" name="Simplex Instance Generator" />
       <element id="library" level="project" name="cplex" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
     </root>
   </artifact>
 </component>
