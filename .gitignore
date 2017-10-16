@@ -90,9 +90,8 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-
+Simplex Instance Generator/.idea/workspace.xml
 
 # test files
 *actual*
 *expected*
-Simplex Instance Generator/.idea/workspace.xml
