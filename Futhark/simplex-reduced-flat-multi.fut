@@ -1,19 +1,14 @@
 -- Implementation of Simplex: reduced, flat representation
 --
--- main A b c v = optimal objective value
--- A are the constraint coefficients (flattened m*n length)
--- b are the constraint values (m length)
--- c are the objective coefficients (n length)
--- v is the objective value
+-- main As bs cs vs = lists of optimal objective values
+-- As are lists of the constraint coefficients (flattened m*n length)
+-- bs are lists of the constraint values (m length)
+-- cs are lists of the objective coefficients (n length)
+-- vs are lists of the objective values
 --
 -- ==
--- compiled input {
---   [[1.0f32, 2.0f32, 3.0f32, 2.0f32, 2.0f32, 5.0f32, 4.0f32, 1.0f32, 2.0f32], [93.44461f32, 71.88667f32, 74.54679f32, 79.33898f32, 75.88172f32, 79.05727f32, 92.16154f32, 57.39885f32, 65.48771f32]] 
---   [[30.0f32,24.0f32,36.0f32], [31.72006f32, 23.99789f32, 47.660904f32]]
---   [[3.0f32,1.0f32,2.0f32], [76.21876f32, 69.50258f32, 46.55636f32]]
---   [0.0f32, 0.0f32]
--- }
--- output { [28.0f32, 23.054108f32] }
+-- compiled input @tests/test_in.txt
+-- output @tests/test_out.txt
 
 default(i32)
 default(f32)
@@ -107,8 +102,17 @@ let multi_simplex (instances : []([]f32, []f32, []f32, f32)) : []f32 =
     in (res, continue)
 	in map(\(_,_,_,v,_,_) -> v) res
 
-let main (As:[][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
-  let instances = zip As bs cs vs
+let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
+  let flatAs =
+    map
+      (\a ->
+        let sh = shape a
+        let m = sh[0]
+        let n = sh[1]
+        in map (\i -> a[i / n, i % n]) (iota (m*n))
+      )
+      As
+  let instances = zip flatAs bs cs vs
   let obj = multi_simplex(instances)
   in obj
 

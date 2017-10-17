@@ -1,19 +1,14 @@
 -- Implementation of Simplex: reduced, flat representation
 --
--- main A b c v = optimal objective value
--- A are the constraint coefficients (flattened m*n length)
--- b are the constraint values (m length)
--- c are the objective coefficients (n length)
--- v is the objective value
+-- main As bs cs vs = list of optimal objective values
+-- As are lists of the constraint coefficients (flattened m*n length)
+-- bs are lists of the constraint values (m length)
+-- cs are lists of the objective coefficients (n length)
+-- vs are lists of the objective values
 --
 -- ==
--- compiled input {
---   [1.0f32, 2.0f32, 3.0f32, 2.0f32, 2.0f32, 5.0f32, 4.0f32, 1.0f32, 2.0f32]
---   [30.0f32,24.0f32,36.0f32]
---   [3.0f32,1.0f32,2.0f32]
---   0.0f32
--- }
--- output { 28.0f32 }
+-- compiled input @tests/test_in.txt
+-- output @tests/test_out.txt
 
 default(i32)
 default(f32)
@@ -85,5 +80,15 @@ let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
 
-let main [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) : f32 =
-  let (obj, _) = simplex A b c v in obj
+let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
+  let flatAs =
+    map
+      (\a ->
+        let sh = shape a
+        let m = sh[0]
+        let n = sh[1]
+        in map (\i -> a[i / n, i % n]) (iota (m*n))
+      )
+      As
+  let instances = zip flatAs bs cs vs
+  in map (\(A,b,c,v) -> let (obj,_) = simplex A b c v in obj) instances
