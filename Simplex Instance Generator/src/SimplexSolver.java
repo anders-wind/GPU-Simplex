@@ -3,17 +3,15 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
-import static ilog.cplex.IloCplex.CplexStatus.Infeasible;
-
 public class SimplexSolver {
 
     public float solveSimplex(SimplexInstance instance) {
-        float expectedObjective = instance.initialObjective;
+        float expectedObjective = 0;
         int variableNumber = instance.getVariableNumber(), constraintNumber = instance.getConstrainNumber();
         try {
             IloCplex cplex = new IloCplex();
             cplex.setOut(null);
-            IloNumVar[] x =  cplex.boolVarArray(variableNumber);
+            IloNumVar[] x =  cplex.numVarArray(variableNumber,0,100);
 
             // Add the objective function
             IloLinearNumExpr obj = cplex.linearNumExpr();
@@ -29,7 +27,7 @@ public class SimplexSolver {
                 for (int j = 0; j < variableNumber; j++) {
                     expr.addTerm(instance.constraints[i][j], x[j]);
                 }
-                cplex.le(expr, instance.constants[i]);
+                cplex.addLe(expr, instance.constants[i]);
             }
 
             // Solve the formulation
