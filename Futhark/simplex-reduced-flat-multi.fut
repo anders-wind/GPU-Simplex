@@ -1,10 +1,9 @@
 -- Implementation of Simplex: reduced, flat representation
 --
--- main As bs cs vs = lists of optimal objective values
+-- main As bs cs = lists of optimal objective values
 -- As are lists of the constraint coefficients (flattened m*n length)
 -- bs are lists of the constraint values (m length)
 -- cs are lists of the objective coefficients (n length)
--- vs are lists of the objective values
 --
 -- ==
 -- compiled input @tests/test_in.txt
@@ -176,7 +175,7 @@ let multi_simplex (instances : []([]f32, []f32, []f32, f32)) : []f32 =
     in (res, continue)
 	in map(\(_,_,_,v,_,_) -> v) res
 
-let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
+let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) =
   let flatAs =
     map
       (\a ->
@@ -186,7 +185,7 @@ let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
         in map (\i -> a[i / n, i % n]) (iota (m*n))
       )
       As
-  let instances = zip flatAs bs cs vs
+  let instances = zip flatAs bs cs (replicate ((shape bs)[0]) 0f32)
   let obj = multi_simplex(instances)
   in obj
 
