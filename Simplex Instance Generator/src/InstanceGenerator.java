@@ -18,9 +18,6 @@ public class InstanceGenerator {
         float[] initialCoefficients = new float[variableNumber];
         float[] initialConstants = new float[constraintNumber];
 
-        // initialize the initial objective value.
-        float initialObjective = random.nextFloat() * 100;
-
         // Initialize coefficients of the objective function
         for (int i = 0; i < variableNumber; i++) {
             initialCoefficients[i] = random.nextFloat() * 100;
@@ -38,6 +35,6 @@ public class InstanceGenerator {
             }
         }
 
-        return new SimplexInstance(constraints, initialObjective, initialCoefficients, initialConstants);
+        return new SimplexInstance(constraints, initialCoefficients, initialConstants);
     }
 }
