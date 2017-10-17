@@ -21,6 +21,19 @@ default(f32)
 -- hack
 let inf : f32 = 1000000f32
 
+let entering_variable [n] (c : [n]f32) : i32 =
+  reduce
+    (\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1)
+    (-1)
+    (iota n)
+
+let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) : i32 =
+  let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else inf) (iota m)
+  in reduce
+       (\min l -> unsafe if min != -1 && delta[l] > delta[min] then min else l)
+       (-1)
+       (iota m)
+
 let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32) (e:i32) =
   -- new constraint values
   let newb = b[l]/A[l*n+e]
@@ -53,35 +66,71 @@ let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32)
   in (AHat, bHat, cHat, vHat)
 
 -- input is list of (A,b,c,v,l,e)
-let multipivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : []([]f32, []f32, []f32, f32, i32, i32) =
-  let instances = filter(\(A, b, c, v, l, e) -> e != (-1)) instancesEL
-  let ns = map(\(A, b, c, v, l, e) -> (shape(c))[0]) instancesEL
-  let ms = map(\(A, b, c, v, l, e) -> (shape(b))[0]) instancesEL
+let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h]([]f32, []f32, []f32, f32, i32, i32) =
+  -- let instances = filter(\(A, b, c, v, l, e) -> e != (-1)) instancesEL
+  let ns = map(\(_, _, c, _, _, _) -> (shape(c))[0]) instancesEL
+  let ms = map(\(_, b, _, _, _, _) -> (shape(b))[0]) instancesEL
 
-  let instances = map(\(A, b, c, v, l, e) index -> (A, b, c, v, l, e, index) (instancesEL iota h)
-  let newbs = map(\(A, b, c, v, l, e, i) -> b[l]/A[l*ns[i]+e]) instances
+  let instances = map(\((A, b, c, v, l, e), index) -> (A, b, c, v, l, e, index)) (zip instancesEL (iota h))
+  let newbs = map(\(A, b, _, _, l, e, i) -> b[l]/A[l*ns[i]+e]) instances
 
-  let iotaMs = map(\i -> (i/m,i%m)) iota (???)
-  let bHats = map(\(i,j) -> 
-    let specificA = #1 instancesEL[i]
-    let specificB = #2 instancesEL[i]
-    in unsafe if j == l then newbs[i] else b[i]-A[i*n+e]*newbs[i]
+  -- maybe not do concat
+  let iotaMs    = reduce (\res list -> concat list res) empty((i32,i32)) (map(\i -> zip (replicate h ms[i]) (iota ms[i])) (iota h))
+  let iotaNs    = reduce (\res list -> concat list res) empty((i32,i32)) (map(\i -> zip (replicate h ns[i]) (iota ns[i])) (iota h))
+  let iotaMxNs  = reduce (\res list -> concat list res) empty((i32,i32)) 
+    (map(\i -> zip (replicate h (ns[i]*ms[i])) (iota (ns[i]*ms[i]))) (iota h))
+
+  let bHats = 
+    map(\(instanceInd, i) -> 
+      let A = #1 instancesEL[instanceInd]
+      let b = #2 instancesEL[instanceInd]
+      let l = #5 instancesEL[instanceInd]
+      let e = #6 instancesEL[instanceInd]
+      let n = ns[i]
+      let newb = newbs[i]
+      in unsafe if i == l then newb else b[i]-A[i*n+e]*newb
     ) iotaMs
 
-  in instancesEL
+  let newAles = map(\(A, _, _, _, l, e, i) -> 1f32/A[l*ns[i]+e]) instances
 
-let entering_variable [n] (c : [n]f32) : i32 =
-  reduce
-    (\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1)
-    (-1)
-    (iota n)
+  let AHats =
+    map
+      (\(instanceInd,ind) ->
+        unsafe
+        let A = #1 instancesEL[instanceInd]
+        let l = #5 instancesEL[instanceInd]
+        let e = #6 instancesEL[instanceInd]
+        let n = ns[instanceInd]
+        let newAle = newAles[instanceInd]
+        let (i,j) = (ind / n, ind % n)
+         in if i == l && j == e then newAle
+         else if i == l then A[i*n+j] / A[i*n+e]
+         else if j == e then -A[i*n+e] * newAle
+         else A[i*n+j] - A[i*n+e] * newAle
+      )
+      iotaMxNs
 
-let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) : i32 =
-  let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else inf) (iota m)
-  in reduce
-       (\min l -> unsafe if min != -1 && delta[l] > delta[min] then min else l)
-       (-1)
-       (iota m)
+  let vHats = map(\(_, _, c, v, _, e, i) -> v + c[e] * newbs[i]) instances
+
+  let cHats = 
+    map
+      (\(instanceInd, i) -> 
+        unsafe
+        let c = #3 instancesEL[instanceInd]
+        let l = #5 instancesEL[instanceInd]
+        let e = #6 instancesEL[instanceInd]
+        let n = ns[instanceInd]
+        in if i == e then -c[e]*AHats[instanceInd*h*n+l*n+i] else c[i]-c[e]*AHats[instanceInd*h + l*n+i])
+    iotaNs
+
+  in map(\i -> 
+    let A = AHats[i*h*ns[i]:i*h*ns[i]+ns[i]*ms[i]]
+    let b = bHats[i*h:i*h+ms[i]]
+    let c = cHats[i*h:i*h+ns[i]]
+    let v = vHats[i]
+    let e = entering_variable c
+    let l = leaving_variable A b e ns[i]
+    in (A,b,c,v,l,e)) (iota h)
 
 let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
   let e = entering_variable c
