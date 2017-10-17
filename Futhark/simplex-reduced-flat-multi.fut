@@ -52,6 +52,24 @@ let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32)
 
   in (AHat, bHat, cHat, vHat)
 
+-- input is list of (A,b,c,v,l,e)
+let multipivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : []([]f32, []f32, []f32, f32, i32, i32) =
+  let instances = filter(\(A, b, c, v, l, e) -> e != (-1)) instancesEL
+  let ns = map(\(A, b, c, v, l, e) -> (shape(c))[0]) instancesEL
+  let ms = map(\(A, b, c, v, l, e) -> (shape(b))[0]) instancesEL
+
+  let instances = map(\(A, b, c, v, l, e) index -> (A, b, c, v, l, e, index) (instancesEL iota h)
+  let newbs = map(\(A, b, c, v, l, e, i) -> b[l]/A[l*ns[i]+e]) instances
+
+  let iotaMs = map(\i -> (i/m,i%m)) iota (???)
+  let bHats = map(\(i,j) -> 
+    let specificA = #1 instancesEL[i]
+    let specificB = #2 instancesEL[i]
+    in unsafe if j == l then newbs[i] else b[i]-A[i*n+e]*newbs[i]
+    ) iotaMs
+
+  in instancesEL
+
 let entering_variable [n] (c : [n]f32) : i32 =
   reduce
     (\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1)
@@ -84,16 +102,7 @@ let multi_simplex (instances : []([]f32, []f32, []f32, f32)) : []f32 =
     in (A, b, c, v, l, e)) instances
   let continue = reduce(\res e -> res || e) (false) (map(\(_,_,_,_,_,e)-> e != (-1)) instancesEL)
   let (res, _) = loop (instancesEL, continue) while continue do
-    let res = map(\(A, b, c, v, l, e) -> 
-      if e != (-1)
-      then
-        let (A,b,c,v) = pivot A b c v l e
-        let n = (shape(c))[0]
-        let e = entering_variable c
-        let l = leaving_variable A b e n
-        in (A, b, c, v, l, e)
-      else 
-        (A, b, c, v, l, e)) instancesEL
+    let res = multi_pivot instancesEL
     let continue = reduce(\res e -> res || e) (false) (map(\(_,_,_,_,_,e)-> e != (-1)) instancesEL)
     in (res, continue)
 	in map(\(_,_,_,v,_,_) -> v) res
