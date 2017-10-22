@@ -16,6 +16,17 @@ default(f32)
 -- hack
 let inf : f32 = 1000000f32
 
+-- segmented scan with (+) on integers:
+let sgmSumI32 [n] (flg : [n]i32) (arr : [n]i32) : [n]i32 =
+  let flgs_vals = 
+    scan ( \ (f1, x1) (f2,x2) -> 
+            let f = f1 | f2 in
+            if f2 > 0 then (f, x2)
+            else (f, x1 + x2) )
+         (0,0) (zip flg arr)
+  let (_, vals) = unzip flgs_vals
+  in vals
+
 let entering_variable [n] (c : [n]f32) : i32 =
   reduce
     (\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1)
@@ -63,60 +74,74 @@ let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32)
 -- input is list of (A,b,c,v,l,e)
 let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h]([]f32, []f32, []f32, f32, i32, i32) =
   -- let instances = filter(\(A, b, c, v, l, e) -> e != (-1)) instancesEL
-  let ns = map(\(_, _, c, _, _, _) -> (shape(c))[0]) instancesEL
-  let ms = map(\(_, b, _, _, _, _) -> (shape(b))[0]) instancesEL
+  let ns  = map(\(_, _, c, _, _, _) -> (shape(c))[0]) instancesEL
+  let ms  = map(\(_, b, _, _, _, _) -> (shape(b))[0]) instancesEL
+  let mns = map(\n m -> n*m) ns ms
 
   let instances = map(\((A, b, c, v, l, e), index) -> (A, b, c, v, l, e, index)) (zip instancesEL (iota h))
   let newbs = map(\(A, b, _, _, l, e, i) -> b[l]/A[l*ns[i]+e]) instances
 
   -- maybe not do concat
-  let iotaMs    = reduce (\res list -> concat list res) empty((i32,i32)) (map(\i -> zip (replicate h ms[i]) (iota ms[i])) (iota h))
-  let iotaNs    = reduce (\res list -> concat list res) empty((i32,i32)) (map(\i -> zip (replicate h ns[i]) (iota ns[i])) (iota h))
-  let iotaMxNs  = reduce (\res list -> concat list res) empty((i32,i32)) 
-    (map(\i -> zip (replicate h (ns[i]*ms[i])) (iota (ns[i]*ms[i]))) (iota h))
+
+  let indsM     = scan (+) 0 ms
+  let sizeM     = last indsM + last ms
+  let flagM     = scatter (replicate sizeM 0) indsM (replicate h 1) 
+  let iotaMs    = sgmSumI32 flagM (replicate sizeM 1)
+  
+  let indsN     = scan (+) 0 ns
+  let sizeN     = last indsN + last ns
+  let flagN     = scatter (replicate sizeN 0) indsN (replicate h 1) 
+  let iotaNs    = sgmSumI32 flagN (replicate sizeN 1)
+
+  let indsMxN   = scan (+) 0 mns
+  let sizeMxN   = last indsMxN + last mns
+  let flagMxN   = scatter (replicate sizeMxN 0) indsMxN (replicate h 1) 
+  let iotaMxNs  = sgmSumI32 flagMxN (replicate sizeMxN 1)
+
+  let instancesIndsM    = scan (+) 0 flagM
+  let instancesIndsN    = scan (+) 0 flagN
+  let instancesIndsMxN  = scan (+) 0 flagMxN
 
   let bHats = 
-    map(\(instanceInd, i) -> 
+    map(\instanceInd i -> 
+      unsafe
       let A = #1 instancesEL[instanceInd]
       let b = #2 instancesEL[instanceInd]
       let l = #5 instancesEL[instanceInd]
       let e = #6 instancesEL[instanceInd]
       let n = ns[i]
       let newb = newbs[i]
-      in unsafe if i == l then newb else b[i]-A[i*n+e]*newb
-    ) iotaMs
+      in if i == l then newb else b[i]-A[i*n+e]*newb
+    ) instancesIndsM iotaMs
 
   let newAles = map(\(A, _, _, _, l, e, i) -> 1f32/A[l*ns[i]+e]) instances
 
   let AHats =
-    map
-      (\(instanceInd,ind) ->
-        unsafe
-        let A = #1 instancesEL[instanceInd]
-        let l = #5 instancesEL[instanceInd]
-        let e = #6 instancesEL[instanceInd]
-        let n = ns[instanceInd]
-        let newAle = newAles[instanceInd]
-        let (i,j) = (ind / n, ind % n)
-         in if i == l && j == e then newAle
-         else if i == l then A[i*n+j] / A[i*n+e]
-         else if j == e then -A[i*n+e] * newAle
-         else A[i*n+j] - A[i*n+e] * newAle
-      )
-      iotaMxNs
+    map(\instanceInd ind ->
+      unsafe
+      let A = #1 instancesEL[instanceInd]
+      let l = #5 instancesEL[instanceInd]
+      let e = #6 instancesEL[instanceInd]
+      let n = ns[instanceInd]
+      let newAle = newAles[instanceInd]
+      let (i,j) = (ind / n, ind % n)
+       in if i == l && j == e then newAle
+       else if i == l then A[i*n+j] / A[i*n+e]
+       else if j == e then -A[i*n+e] * newAle
+       else A[i*n+j] - A[i*n+e] * newAle
+    ) instancesIndsMxN iotaMxNs
 
   let vHats = map(\(_, _, c, v, _, e, i) -> v + c[e] * newbs[i]) instances
 
   let cHats = 
-    map
-      (\(instanceInd, i) -> 
-        unsafe
-        let c = #3 instancesEL[instanceInd]
-        let l = #5 instancesEL[instanceInd]
-        let e = #6 instancesEL[instanceInd]
-        let n = ns[instanceInd]
-        in if i == e then -c[e]*AHats[instanceInd*h*n+l*n+i] else c[i]-c[e]*AHats[instanceInd*h + l*n+i])
-    iotaNs
+    map(\instanceInd i -> 
+      unsafe
+      let c = #3 instancesEL[instanceInd]
+      let l = #5 instancesEL[instanceInd]
+      let e = #6 instancesEL[instanceInd]
+      let n = ns[instanceInd]
+      in  if i == e then -c[e]*AHats[instanceInd*h*n+l*n+i] else c[i]-c[e]*AHats[instanceInd*h + l*n+i]
+    ) instancesIndsN iotaNs
 
   in map(\i -> 
     let A = AHats[i*h*ns[i]:i*h*ns[i]+ns[i]*ms[i]]
