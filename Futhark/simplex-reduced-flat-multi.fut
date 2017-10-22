@@ -111,7 +111,10 @@ let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h](
       let e = #6 instancesEL[instanceInd]
       let n = ns[i]
       let newb = newbs[i]
-      in if i == l then newb else b[i]-A[i*n+e]*newb
+      in if e != (-1) then
+        if i == l then newb else b[i]-A[i*n+e]*newb
+      else
+        b[i]
     ) instancesIndsM iotaMs
 
   let newAles = map(\(A, _, _, _, l, e, i) -> 1f32/A[l*ns[i]+e]) instances
@@ -125,13 +128,16 @@ let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h](
       let n = ns[instanceInd]
       let newAle = newAles[instanceInd]
       let (i,j) = (ind / n, ind % n)
-       in if i == l && j == e then newAle
-       else if i == l then A[i*n+j] / A[i*n+e]
-       else if j == e then -A[i*n+e] * newAle
-       else A[i*n+j] - A[i*n+e] * newAle
+      in if e != (-1)
+      then
+         if i == l && j == e then newAle
+         else if i == l then A[i*n+j] / A[i*n+e]
+         else if j == e then -A[i*n+e] * newAle
+         else A[i*n+j] - A[i*n+e] * newAle
+      else A[i*n+j]
     ) instancesIndsMxN iotaMxNs
 
-  let vHats = map(\(_, _, c, v, _, e, i) -> v + c[e] * newbs[i]) instances
+  let vHats = map(\(_, _, c, v, _, e, i) -> if e!=(-1) then v + c[e] * newbs[i] else v) instances
 
   let cHats = 
     map(\instanceInd i -> 
@@ -140,7 +146,10 @@ let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h](
       let l = #5 instancesEL[instanceInd]
       let e = #6 instancesEL[instanceInd]
       let n = ns[instanceInd]
-      in  if i == e then -c[e]*AHats[instanceInd*h*n+l*n+i] else c[i]-c[e]*AHats[instanceInd*h + l*n+i]
+      in if e != (-1)
+      then
+        if i == e then -c[e]*AHats[instanceInd*h*n+l*n+i] else c[i]-c[e]*AHats[instanceInd*h + l*n+i]
+      else c[i]
     ) instancesIndsN iotaNs
 
   in map(\i -> 
@@ -148,9 +157,16 @@ let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h](
     let b = bHats[i*h:i*h+ms[i]]
     let c = cHats[i*h:i*h+ns[i]]
     let v = vHats[i]
-    let e = entering_variable c
-    let l = leaving_variable A b e ns[i]
-    in (A,b,c,v,l,e)) (iota h)
+    let e = #6 instancesEL[i]
+    in if e != (-1)
+    then
+      let e = entering_variable c
+      let l = leaving_variable A b e ns[i]
+      in (A,b,c,v,l,e)
+    else
+      let l = #5 instancesEL[i]
+      in (A,b,c,v,l,e)
+    ) (iota h)
 
 let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
   let e = entering_variable c
