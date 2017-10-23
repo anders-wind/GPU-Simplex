@@ -6,8 +6,11 @@
 -- cs are lists of the objective coefficients (n length)
 --
 -- ==
--- compiled input @tests/test_in.txt
+-- nobench input @tests/test_in.txt
 -- output @tests/test_out.txt
+--
+-- compiled input @tests/gen_test_in.txt
+-- output @tests/gen_test_out.txt
 
 default(i32)
 default(f32)
