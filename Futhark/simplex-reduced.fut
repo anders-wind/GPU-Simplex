@@ -38,8 +38,8 @@ let pivot [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32) (e:i
           (\j ->
             unsafe
             if j == e
-            then -A[i,e] * newArowc -- newArow[j]
-            else A[i,j] - A[i,e] * newArowc
+            then -A[i,e] * newArowc
+            else A[i,j] - A[i,e] * newArow[j]
           )
           (iota n)
      )

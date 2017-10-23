@@ -55,9 +55,9 @@ let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32)
          unsafe
          let (i,j) = (ind / n, ind % n)
          in if i == l && j == e then newAle
-         else if i == l then A[i*n+j] / A[i*n+e]
+         else if i == l then A[l*n+j] / A[l*n+e]
          else if j == e then -A[i*n+e] * newAle
-         else A[i*n+j] - A[i*n+e] * newAle
+         else A[i*n+j] - A[i*n+e] * A[l*n+j] / A[l*n+e]
       )
       (iota (m*n))
 
