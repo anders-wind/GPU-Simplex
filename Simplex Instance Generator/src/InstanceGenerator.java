@@ -34,7 +34,6 @@ public class InstanceGenerator {
                 constraints[i][j] = random.nextFloat() * 100;
             }
         }
-
-        return new SimplexInstance(constraints, initialCoefficients, initialConstants);
+        return new SimplexInstance(constraints, initialConstants, initialCoefficients);
     }
 }
