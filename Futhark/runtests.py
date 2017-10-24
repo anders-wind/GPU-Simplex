@@ -98,7 +98,7 @@ def main():
     parser.add_argument('-t','--test', help='Test one file')
     parser.add_argument('-e','--bench-all', help='Benchmark all versions',action='store_true')
     parser.add_argument('-b','--bench', help='Benchmark one file')
-    parser.add_argument('-n','--number', help='Number of instances to generate.', type=int, default=1)
+    parser.add_argument('-n','--number', help='Number of instances to generate.', type=int, default=5)
     parser.add_argument('-v','--variables', help='Number of variables in each instance', type=int, default=5)
     parser.add_argument('-c','--constraints', help='Number of constraints in each instance', type=int, default=5)
     parser.add_argument('-x','--no-test-bench', help='Only generate test data', action='store_true')

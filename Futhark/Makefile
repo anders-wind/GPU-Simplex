@@ -11,7 +11,7 @@ opencl: $(SRC:.fut=-opencl)
 	futhark-opencl $< -o $@
 
 test:
-	@$(foreach f,$(SRC),futhark-test $(f);)
+	./runtests.py
 
 clean:
 	rm -f *-c *-opencl *.c *expected* *actual* *.bin
