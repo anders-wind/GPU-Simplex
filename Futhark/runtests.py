@@ -40,17 +40,17 @@ def generate_test_data(filename,n,v,c):
     cmd = strc.format(n,v,c,filename)
     subprocess.call(cmd, shell=True)
 
-def run_tests(files):
+def run_tests(files, compiler):
     for f in files:
         if os.path.isfile(f):
-            subprocess.call('futhark-test '+f, shell=True)
+            subprocess.call('futhark-test --compiler='+compiler+' '+f, shell=True)
         else:
             print ("File doesn't exist: " + f)
 
-def run_benches(files):
+def run_benches(files, compiler):
     for f in files:
         if os.path.isfile(f):
-            subprocess.call('futhark-bench '+f, shell=True)
+            subprocess.call('futhark-bench --compiler='+compiler+' '+f, shell=True)
         else:
             print ("File doesn't exist: " + f)
 
@@ -66,23 +66,24 @@ def doit(args):
             generate_test_data(test_file,n,v,c)
             arrange_test_data(test_file,test_in_file,test_out_file)
 
+        compiler = args.compiler
         if args.no_test_bench:
             pass
         elif args.test_all:
             print 'Testing all files'
-            run_tests(glob.glob('./*.fut'))
+            run_tests(glob.glob('./*.fut'), compiler)
         elif args.test:
-            print ('Testing one file: ' + args.test)
+            print ('Testing one file: ' + args.test, compiler)
             run_tests([args.test])
         elif args.bench_all:
             print 'Benchmarking all files'
-            run_benches(glob.glob('./*.fut'))
+            run_benches(glob.glob('./*.fut'), compiler)
         elif args.bench:
-            print ('Benchmarking one file: ' + args.bench)
+            print ('Benchmarking one file: ' + args.bench, compiler)
             run_benches([args.bench])
         else:
             print 'Default: Testing all files'
-            run_tests(glob.glob('./*.fut'))
+            run_tests(glob.glob('./*.fut'), compiler)
     finally:
         cleanup()
 
@@ -97,6 +98,7 @@ def main():
     parser.add_argument('-c','--constraints', help='Number of constraints in each instance', type=int, default=5)
     parser.add_argument('-x','--no-test-bench', help='Only generate test data', action='store_true')
     parser.add_argument('-y','--no-gen', help='Do not generate test data', action='store_true')
+    parser.add_argument('-p','--compiler', help='Which Futhark compiler to use', default='futhark-c')
     # TODO: maybe data gen mode: sparse, etc.
     #       --directory: run tests from directory
     #       variable size of instances generated
