@@ -77,20 +77,12 @@ let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     let p = swap p e (l+n)
     -- should have a check for if l == -1 here, but it will throw out of
     -- bounds error if not, so that'll do as our "Unbounded" result for now
-    let (A,b,c,v) = pivot A b c v l e
+    let (A,b,c,v) = unsafe pivot A b c v l e
     let e = entering_variable c
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
 
-let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) =
-  let flatAs =
-    map
-      (\a ->
-        let sh = shape a
-        let m = sh[0]
-        let n = sh[1]
-        in map (\i -> a[i / n, i % n]) (iota (m*n))
-      )
-      As
+let main [h] [m] [n] (As:[h][m][n]f32) (bs:[h][m]f32) (cs:[h][n]f32) =
+  let flatAs = map (\a -> map (\i -> unsafe a[i / n, i % n]) (iota (m*n))) As
   let instances = zip flatAs bs cs
   in map (\(A,b,c) -> let (obj,_) = simplex A b c 0f32 in obj) instances

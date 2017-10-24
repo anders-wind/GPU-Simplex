@@ -85,7 +85,7 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     -- should have a check for if l == -1 here, but it will throw out of
     -- bounds error if not, so that'll do as our "Unbounded" result for now
     let p = swap p e (l+n)
-    let (A,b,c,v) = pivot A b c v l e
+    let (A,b,c,v) = unsafe pivot A b c v l e
     let e = entering_variable c
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
