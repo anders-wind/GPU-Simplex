@@ -59,6 +59,11 @@ def cleanup():
 
 def doit(args):
     try:
+        if args.convert:
+            print 'Converting Simplex Instance Generator data to futhark simplex data'
+            arrange_test_data(args.convert,test_in_file,test_out_file)
+            return
+
         if not(args.no_gen):
             n,v,c=args.number, args.variables,args.constraints
             print ('Generating test data: N={0}, V={1}, C={2}'.format(n,v,c))
@@ -99,6 +104,7 @@ def main():
     parser.add_argument('-x','--no-test-bench', help='Only generate test data', action='store_true')
     parser.add_argument('-y','--no-gen', help='Do not generate test data', action='store_true')
     parser.add_argument('-p','--compiler', help='Which Futhark compiler to use', default='futhark-c')
+    parser.add_argument('--convert', help='Given a file with Simplex Instance Generator output, convert to futhark simplex format')
     # TODO: maybe data gen mode: sparse, etc.
     #       --directory: run tests from directory
     #       variable size of instances generated
