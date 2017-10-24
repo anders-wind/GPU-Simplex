@@ -1,14 +1,16 @@
 -- Implementation of Simplex: reduced, nested representation
 --
--- main As bs cs vs = list of optimal objective values
+-- main As bs cs = list of optimal objective values
 -- As are lists of the constraint coefficients (m rows, n columns)
 -- bs are lists of the constraint values (m length)
 -- cs are lists of the objective coefficients (n length)
--- vs are lists of the objective values
 --
 -- ==
--- compiled input @tests/test_in.txt
+-- nobench input @tests/test_in.txt
 -- output @tests/test_out.txt
+--
+-- compiled input @tests/gen_test_in.txt
+-- output @tests/gen_test_out.txt
 
 default(i32)
 default(f32)
@@ -39,8 +41,8 @@ let pivot [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32) (e:i
           (\j ->
             unsafe
             if j == e
-            then -A[i,e] * newArowc -- newArow[j]
-            else A[i,j] - A[i,e] * newArowc
+            then -A[i,e] * newArowc
+            else A[i,j] - A[i,e] * newArow[j]
           )
           (iota n)
      )
@@ -88,6 +90,6 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
 
-let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
-  let instances = zip As bs cs vs
-  in map (\(A,b,c,v) -> let (obj,_) = simplex A b c v in obj) instances
+let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) =
+  let instances = zip As bs cs
+  in map (\(A,b,c) -> let (obj,_) = simplex A b c 0f32 in obj) instances

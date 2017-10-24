@@ -9,11 +9,11 @@ N=1
 
 default: compile
 
-compile:
+compile: $(SRC)*
 	mkdir -p $(TARGET)
 	javac -cp $(SRC):$(CPLEX)lib/* $(SRC)Program.java -d $(TARGET)
 
-run:
+run: $(SRC)*
 	java -cp $(TARGET):$(CPLEX)lib/* -Djava.library.path=$(CPLEX)bin/x86-64_linux/ Program $(V) $(C) $(N)
 
 clean:

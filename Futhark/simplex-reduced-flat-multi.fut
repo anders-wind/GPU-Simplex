@@ -1,14 +1,16 @@
 -- Implementation of Simplex: reduced, flat representation
 --
--- main As bs cs vs = lists of optimal objective values
+-- main As bs cs = lists of optimal objective values
 -- As are lists of the constraint coefficients (flattened m*n length)
 -- bs are lists of the constraint values (m length)
 -- cs are lists of the objective coefficients (n length)
--- vs are lists of the objective values
 --
 -- ==
--- compiled input @tests/test_in.txt
+-- nobench input @tests/test_in.txt
 -- output @tests/test_out.txt
+--
+-- compiled input @tests/gen_test_in.txt
+-- output @tests/gen_test_out.txt
 
 default(i32)
 default(f32)
@@ -56,9 +58,9 @@ let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32)
          unsafe
          let (i,j) = (ind / n, ind % n)
          in if i == l && j == e then newAle
-         else if i == l then A[i*n+j] / A[i*n+e]
+         else if i == l then A[l*n+j] / A[l*n+e]
          else if j == e then -A[i*n+e] * newAle
-         else A[i*n+j] - A[i*n+e] * newAle
+         else A[i*n+j] - A[i*n+e] * A[l*n+j] / A[l*n+e]
       )
       (iota (m*n))
 
@@ -192,7 +194,7 @@ let multi_simplex (instances : []([]f32, []f32, []f32, f32)) : []f32 =
     in (res, continue)
 	in map(\(_,_,_,v,_,_) -> v) res
 
-let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
+let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) =
   let flatAs =
     map
       (\a ->
@@ -202,7 +204,7 @@ let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) (vs:[]f32) =
         in map (\i -> a[i / n, i % n]) (iota (m*n))
       )
       As
-  let instances = zip flatAs bs cs vs
+  let instances = zip flatAs bs cs (replicate ((shape bs)[0]) 0f32)
   let obj = multi_simplex(instances)
   in obj
 
