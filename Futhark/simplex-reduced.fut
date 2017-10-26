@@ -93,7 +93,7 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
 
-let main [h] (As:[h][][]f32) (bs:[h][]f32) (cs:[h][]f32) =
+let main [h] [m] [n] (As:[h][m][n]f32) (bs:[h][m]f32) (cs:[h][n]f32) =
   let res = replicate h 0f32
   in loop res for i < h do
     let (A,b,c) = (As[i], bs[i], cs[i])

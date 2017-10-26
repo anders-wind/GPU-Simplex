@@ -7,11 +7,10 @@
 -- cs are lists of the objective coefficients (n length)
 --
 -- ==
--- nobench input @tests/test_in.txt
--- output @tests/test_out.txt
---
--- compiled input @tests/gen_test_in.txt
--- output @tests/gen_test_out.txt
+-- nobench input @tests/flat_test_in.txt
+-- output @tests/flat_test_out.txt
+
+-- TODO: change runtests.py to generate flat_* tests
 
 default(i32)
 default(f32)
@@ -85,10 +84,9 @@ let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
 
-let main [h] [m] [n] (As:[h][m][n]f32) (bs:[h][m]f32) (cs:[h][n]f32) =
-  let flatAs = map (\a -> map (\i -> unsafe a[i / n, i % n]) (iota (m*n))) As
+let main [h] (As:[h][]f32) (bs:[h][]f32) (cs:[h][]f32) =
   let res = replicate h 0f32
   in loop res for i < h do
-    let (A,b,c) = (flatAs[i], bs[i], cs[i])
+    let (A,b,c) = (As[i], bs[i], cs[i])
     let (obj,_) = simplex A b c 0f32
     in res with [i] <- obj
