@@ -33,7 +33,7 @@ let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (ins_inds_n:[n]i32) (cs:[]f32
             else if res != (-1)
               then (f,res, 0)
               else if cs[c_inds[ins_i] + j] > 0f32
-                then (f, j, 0) 
+                then (f, j, 0)
                 else (f,-1, 0))
     (0,-1, 0) (zip flg arr ins_inds_n)
   let (_, vals,_) = unzip flgs_vals
@@ -92,10 +92,10 @@ let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (ins_inds_
   let es      = map(\i -> e_scans[i-1]) ns_scan
   in es
 
-let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m : []i32) (ns:[]i32) (A:[]f32) (A_inds:[]i32) (b:[]f32) (b_inds:[]i32) (es:[]i32) : []i32 =
+let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m : []i32) (ns:[]i32) (As:[]f32) (A_inds:[]i32) (bs:[]f32) (b_inds:[]i32) (es:[]i32) : []i32 =
   let deltas  = 
-    map (\(ins_i, i) -> unsafe if A[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] > 0f32 
-      then b[b_inds[ins_i] + i] / A[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] 
+    map (\(ins_i, i) -> unsafe if As[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] > 0f32 
+      then bs[b_inds[ins_i] + i]/As[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] 
       else inf) 
     (zip ins_inds_m iota_ms)
   -- let inf_scan= sgmAllInfF32 flag_m deltas
@@ -105,8 +105,8 @@ let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m
   in ls
 
 -- input is list of (A,b,c,v,l,e)
-let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls:[h]i32) (ns:[h]i32) (ms:[h]i32) =
-  let mns = map(\n m -> n*m) ns ms
+let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls:[h]i32) (ms:[h]i32) (ns:[h]i32) =
+  let mns = map (*) ns ms
 
   let A_inds = scan_inc_to_exc (scan (+) 0 mns)
   let b_inds = scan_inc_to_exc (scan (+) 0 ms)
@@ -116,7 +116,7 @@ let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls
 
   let newbs = 
     map(\i-> unsafe if es[i] != (-1)
-      then bs[b_inds[i]+ls[i]]/As[A_inds[i]+ls[i]*ns[i]+es[i]]
+      then bs[b_inds[i] + ls[i]]/As[A_inds[i] + ls[i]*ns[i] + es[i]]
       else 0f32
     ) instance_iota
 
@@ -148,15 +148,15 @@ let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls
       let l     = ls[ins_i]
       let newb  = newbs[ins_i]
       in if e != (-1) then
-        if i == l then newb else bs[b_inds[ins_i] + i] - As[A_inds[ins_i]+i*n+e]*newb
+        if i == l then newb else bs[b_inds[ins_i] + i] - As[A_inds[ins_i] + i*n + e]*newb
       else
-        bs[i]
+        bs[b_inds[ins_i] + i]
     ) instancesIndsM iotaMs
 
   let newAles = 
     map(\i -> unsafe
       if es[i]!=(-1)
-        then 1f32 / As[A_inds[i] + ls[i]*ns[i] + es[i]]
+        then 1f32/As[A_inds[i] + ls[i]*ns[i] + es[i]]
         else 0f32
     ) instance_iota
 
@@ -164,22 +164,22 @@ let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls
     map(\ins_i ind ->
       unsafe
       let n       = ns[ins_i]
-      let l       = ls[ins_i]
       let e       = es[ins_i]
+      let l       = ls[ins_i]
       let newAle  = newAles[ins_i]
-      let (i,j) = (ind / n, ind % n)
+      let (i, j)  = (ind / n, ind % n)
       in if e != (-1)
       then
          if i == l && j == e then newAle
-         else if i == l then As[A_inds[ins_i] + i*n+j] / As[A_inds[ins_i] + i*n+e]
-         else if j == e then -As[A_inds[ins_i] + i*n+e] * newAle
-         else As[A_inds[ins_i] + i*n+j] - As[A_inds[ins_i] + i*n+e] * As[A_inds[ins_i] + l*n+j] / As[A_inds[ins_i] + l*n+e]
-      else As[A_inds[ins_i] + i*n+j]
+         else if i == l then As[A_inds[ins_i] + i*n + j]/As[A_inds[ins_i] + i*n + e]
+         else if j == e then -As[A_inds[ins_i] + i*n + e] * newAle
+         else As[A_inds[ins_i] + i*n + j] - As[A_inds[ins_i] + i*n + e] * As[A_inds[ins_i] + l*n + j]/As[A_inds[ins_i] + l*n + e]
+      else As[A_inds[ins_i] + i*n + j]
     ) instancesIndsMxN iotaMxNs
 
   let vHats = 
     map(\i -> unsafe if es[i] != (-1) 
-      then vs[i] + cs[es[i]] * newbs[i] 
+      then vs[i] + cs[c_inds[i] + es[i]] * newbs[i]
       else vs[i]
     ) instance_iota
 
@@ -192,12 +192,12 @@ let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls
       in if e != (-1)
       then
         if i == e
-          then -cs[c_inds[ins_i] + e]*AHats[A_inds[ins_i] + l*n+i]
-          else cs[c_inds[ins_i] + i]-cs[c_inds[ins_i] + e]*AHats[A_inds[ins_i] + l*n+i]
+          then -cs[c_inds[ins_i] + e]*AHats[A_inds[ins_i] + l*n + i]
+          else cs[c_inds[ins_i] + i]-cs[c_inds[ins_i] + e]*AHats[A_inds[ins_i] + l*n + i]
       else cs[c_inds[ins_i] + i]
     ) instancesIndsN iotaNs
 
-  in (AHats,bHats,cHats,vHats)
+  in (AHats, bHats, cHats, vHats)
 
 let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   let vs = replicate h 0f32 --  assume instances start with 0 score
@@ -231,7 +231,7 @@ let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
 
   let continue = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
   let (_,_,_,vs,_,_,_)    = loop (As, bs, cs, vs, es, ls, continue) while continue do
-    let (As, bs, cs, vs)  = multi_pivot As bs cs vs es ls ns ms
+    let (As, bs, cs, vs)  = multi_pivot As bs cs vs es ls ms ns
     let es        = entering_variables flag_n iota_ns ns_scan ins_inds_n cs c_inds
     let ls        = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns As A_inds bs b_inds es
     let continue  = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
