@@ -13,6 +13,8 @@
 -- compiled input @tests/gen_test_in.txt
 -- output @tests/gen_test_out.txt
 
+-- TODO change to use multi_* tests with complete flattening
+
 default(i32)
 default(f32)
 

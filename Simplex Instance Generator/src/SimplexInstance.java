@@ -1,12 +1,12 @@
 import java.util.Arrays;
 
 public class SimplexInstance {
-    final float[][] constraints;
-    final float[] coefficients;
-    final float[] constants;
+    final int[][] constraints;
+    final int[] coefficients;
+    final int[] constants;
     private float expectedObjective;
 
-    SimplexInstance(float[][] constraints, float[] constants, float[] coefficients) {
+    SimplexInstance(int[][] constraints, int[] constants, int[] coefficients) {
         this.constraints = constraints;
         this.coefficients = coefficients;
         this.constants = constants;

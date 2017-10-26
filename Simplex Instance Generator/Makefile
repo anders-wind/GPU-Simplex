@@ -3,18 +3,23 @@
 SRC=src/
 TARGET=bin/
 CPLEX=/opt/ibm/ILOG/CPLEX_Studio1271/cplex/
-V=3
-C=3
 N=1
+VLOW=3
+VHIGH=3
+CLOW=3
+CHIGH=3
 
 default: compile
 
-compile: $(SRC)*
+compile: $(TARGET)*.class
+
+$(TARGET)%.class: $(SRC)%.java
 	mkdir -p $(TARGET)
 	javac -cp $(SRC):$(CPLEX)lib/* $(SRC)Program.java -d $(TARGET)
 
-run: $(SRC)*
-	java -cp $(TARGET):$(CPLEX)lib/* -Djava.library.path=$(CPLEX)bin/x86-64_linux/ Program $(V) $(C) $(N)
+run: $(TARGET)*.class
+	java -Xmx4096m -cp $(TARGET):$(CPLEX)lib/* -Djava.library.path=$(CPLEX)bin/x86-64_linux/ \
+		Program $(N) $(VLOW) $(VHIGH) $(CLOW) $(CHIGH)
 
 clean:
 	rm -rf $(TARGET)
