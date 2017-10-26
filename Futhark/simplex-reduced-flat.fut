@@ -1,5 +1,6 @@
 -- Implementation of Simplex: reduced, flat representation
 --
+-- Only works on regular arrays, i.e. all instances need to be same size
 -- main As bs cs = list of optimal objective values
 -- As are lists of the constraint coefficients (flattened m*n length)
 -- bs are lists of the constraint values (m length)
@@ -84,5 +85,8 @@ let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
 
 let main [h] [m] [n] (As:[h][m][n]f32) (bs:[h][m]f32) (cs:[h][n]f32) =
   let flatAs = map (\a -> map (\i -> unsafe a[i / n, i % n]) (iota (m*n))) As
-  let instances = zip flatAs bs cs
-  in map (\(A,b,c) -> let (obj,_) = simplex A b c 0f32 in obj) instances
+  let res = replicate h 0f32
+  in loop res for i < h do
+    let (A,b,c) = (flatAs[i], bs[i], cs[i])
+    let (obj,_) = simplex A b c 0f32
+    in res with [i] <- obj

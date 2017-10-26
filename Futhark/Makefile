@@ -10,7 +10,7 @@ opencl: $(SRC:.fut=-opencl)
 %-opencl: %.fut
 	futhark-opencl $< -o $@
 
-test:
+test: $(SRC)
 	./runtests.py
 
 clean:

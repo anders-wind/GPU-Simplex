@@ -1,5 +1,6 @@
 -- Implementation of Simplex: reduced, flat representation
 --
+-- Only works on regular arrays, i.e. all instances need to be same size
 -- main As bs cs = lists of optimal objective values
 -- As are lists of the constraint coefficients (flattened m*n length)
 -- bs are lists of the constraint values (m length)
@@ -205,7 +206,7 @@ let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
   in (v, b)
 
 let multi_simplex (instances : []([]f32, []f32, []f32, f32)) =
-	let instancesEL = map(\(A, b, c, v) ->
+  let instancesEL = map(\(A, b, c, v) ->
     let n = length c
     let e = entering_variable c
     let l = leaving_variable A b e n

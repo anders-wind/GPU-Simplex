@@ -1,5 +1,6 @@
 -- Implementation of Simplex: reduced, nested representation
 --
+-- Only works on regular arrays, i.e. all instances need to be same size
 -- main As bs cs = list of optimal objective values
 -- As are lists of the constraint coefficients (m rows, n columns)
 -- bs are lists of the constraint values (m length)
@@ -90,6 +91,9 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
     in (A,b,c,v,e,p)
   in (v, extract (p[n:m+n]) b n)
 
-let main (As:[][][]f32) (bs:[][]f32) (cs:[][]f32) =
-  let instances = zip As bs cs
-  in map (\(A,b,c) -> let (obj,_) = simplex A b c 0f32 in obj) instances
+let main [h] (As:[h][][]f32) (bs:[h][]f32) (cs:[h][]f32) =
+  let res = replicate h 0f32
+  in loop res for i < h do
+    let (A,b,c) = (As[i], bs[i], cs[i])
+    let (obj,_) = simplex A b c 0f32
+    in res with [i] <- obj
