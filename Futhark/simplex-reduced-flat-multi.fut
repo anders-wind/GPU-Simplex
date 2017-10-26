@@ -19,6 +19,44 @@ default(f32)
 -- hack
 let inf : f32 = 1000000f32
 
+-- segmented scan for first positive number in flat cs with c_inds 
+let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (cs:[]f32) (c_inds:[]i32) : [n]i32 =
+  let flgs_vals =
+    scan ( \ (f1, x1) (f2, x2) ->
+            let f = f1 | f2 in
+            if f2 > 0 then if cs[c_inds[x2]] > 0f32 then x2 else -1
+            else (f, 
+              if x1 != -1 
+                then x1 
+                else if cs[c_inds[x2]] > 0f32 then x2 else -1)
+         (0,-1) (zip flg arr)
+  let (_, vals) = unzip flgs_vals
+  in vals
+
+-- segmented scan for predicate all infinite. 
+-- Returns 0 on all inf 1 otherwise
+let sgmAllInfI32 [n] (flg : [n]i32) (arr : [n]f32) : [n]i32 =
+  let flgs_vals =
+    scan ( \ (f1, x1) (f2, x2) ->
+            let f = f1 | f2 in
+            if f2 > 0 then if x2 == inf then x1 else 1i32
+            else (f, if x2 == inf then x1 else 1i32)
+         (0, 0) (zip flg arr)
+  let (_, vals) = unzip flgs_vals
+  in vals
+
+-- segmented scan which finds index with lowest fraction in deltas.
+let sgmMinFractI32 [n] (flg : [n]i32) (arr : [n]f32) (deltas : []f32) : []i32 =
+  let flgs_vals =
+    scan ( \ (f1, min) (f2, l) ->
+            let f = f1 | f2 in
+            if f2 > 0 then l -- no min first element
+            else (f, if delta[l] > delta[min] then min else l)
+         (0, -1) (zip flg arr)
+  let (_, vals) = unzip flgs_vals
+  in vals
+
+
 -- segmented scan with (+) on integers:
 let sgmSumI32 [n] (flg : [n]i32) (arr : [n]i32) : [n]i32 =
   let flgs_vals =
@@ -36,42 +74,34 @@ let sgm_scan_inc_to_exc [n] (flg : [n]i32) (arr:[n]i32) : [n]i32 =
 let scan_inc_to_exc [n] (arr:[n]i32) : [n]i32 =
   map (\i -> unsafe if (i==0) then 0 else arr[i-1]) (iota n)
 
-let entering_variable [n] (c : [n]f32) : i32 =
-  reduce
-    (\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1)
-    (-1)
-    (iota n)
+let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (cs:[]f32) (c_inds:[]i32): []i32 =
+  let e_scans = sgmLowestI32 flag_n iota_ns cs c_inds
+  let es      = map(\i -> e_scans[i]) ns_scan
+  in es
 
-let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) : i32 =
-  let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else inf) (iota m)
-  let all_inf = reduce (\acc b -> if b == inf then acc else 1f32) 0f32 delta
-  in if all_inf == 0f32 then -1 else
-    reduce
-      (\min l -> unsafe if min != -1 && delta[l] > delta[min] then min else l)
-      (-1)
-      (iota m)
+-- there might be an error on j*n instead of *m but we need to check up on it
+let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (A:[]f32) (A_inds:[]i32) (b:[]f32) (b_inds:[]i32): []i32 =
+  let deltas  = map (\j -> unsafe if A[A_inds[i]+j*n+e] > 0f32 then b[b_inds[i]+j]/A[A_inds[i]+j*n+e] else inf) (iota m)
+  let inf_scan= sgmAllInfF32 flag_m deltas
+  let infs    = map(\i -> inf_scan[i]) ms_scan
+  let l_scans = sgmMinFractI32 flag_m iota_ms deltas -- could use infs to check for unboundedness
+  let ls      = map(\i -> l_scans[i]) ms_scan -- maybe off by 1
 
 -- input is list of (A,b,c,v,l,e)
-let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h]([]f32, []f32, []f32, f32, i32, i32) =
-  -- let instances = filter(\(A, b, c, v, l, e) -> e != (-1)) instancesEL
-  let ns  = map(\(_, _, c, _, _, _) -> length c) instancesEL
-  let ms  = map(\(_, b, _, _, _, _) -> length b) instancesEL
+let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls:[h]i32) (ns:[h]i32) (ms:[h]i32) =
   let mns = map(\n m -> n*m) ns ms
 
-  let AHatsInds = scan_inc_to_exc (scan (+) 0 mns)
-  let bHatsInds = scan_inc_to_exc (scan (+) 0 ms)
-  let cHatsInds = scan_inc_to_exc (scan (+) 0 ns)
+  let A_inds = scan_inc_to_exc (scan (+) 0 mns)
+  let b_inds = scan_inc_to_exc (scan (+) 0 ms)
+  let c_inds = scan_inc_to_exc (scan (+) 0 ns)
 
-  let instances = map(\((A, b, c, v, l, e), index) -> (A, b, c, v, l, e, index)) (zip instancesEL (iota h))
-  let newbs = map(\(A, b, _, _, l, e, i) ->
-    unsafe
-    if e!= (-1)
-      then b[l]/A[l*ns[i]+e]
+  let newbs = 
+    map(\i-> unsafe if es[i] != (-1)
+      then bs[b_inds[i]+l]/As[A_inds[i]+l*ns[i]+e]
       else 0f32
-    ) instances
+    ) iota h
 
-  -- maybe not do concat
-
+  -- we should reuse this
   let indsM     = scan_inc_to_exc (scan (+) 0 ms)
   let sizeM     = last indsM + last ms
   let flagM     = scatter (replicate sizeM 0) indsM (replicate h 1)
@@ -92,94 +122,105 @@ let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h](
   let instancesIndsMxN  = map (\x -> x-1) (scan (+) 0 flagMxN)
 
   let bHats =
-    map(\instanceInd i ->
+    map(\ins_i i ->
       unsafe
-      let A = #1 instancesEL[instanceInd]
-      let b = #2 instancesEL[instanceInd]
-      let l = #5 instancesEL[instanceInd]
-      let e = #6 instancesEL[instanceInd]
-      let n = ns[i]
-      let newb = newbs[instanceInd]
+      let n     = ns[ins_i]
+      let e     = es[ins_i]
+      let l     = ls[ins_i]
+      let newb  = newbs[ins_i]
       in if e != (-1) then
-        if i == l then newb else b[i]-A[i*n+e]*newb
+        if i == l then newb else b[b_inds[ins_i] + i] - A[A_inds[ins_i]+i*n+e]*newb
       else
         b[i]
     ) instancesIndsM iotaMs
 
-  let newAles = map(\(A, _, _, _, l, e, i) ->
-    unsafe
-    if e!=(-1)
-      then 1f32/A[l*ns[i]+e]
-      else 0f32
-    ) instances
+  let newAles = 
+    map(\i -> unsafe
+      if es[i]!=(-1)
+        then 1f32 / A[A_inds[i] + ls[i]*ns[i] + es[i]]
+        else 0f32
+    ) (iota h)
 
   let AHats =
-    map(\instanceInd ind ->
+    map(\ins_i ind ->
       unsafe
-      let A = #1 instancesEL[instanceInd]
-      let l = #5 instancesEL[instanceInd]
-      let e = #6 instancesEL[instanceInd]
-      let n = ns[instanceInd]
-      let newAle = newAles[instanceInd]
+      let n       = ns[ins_i]
+      let l       = ls[ins_i]
+      let e       = es[ins_i]
+      let newAle  = newAles[ins_i]
       let (i,j) = (ind / n, ind % n)
       in if e != (-1)
       then
          if i == l && j == e then newAle
-         else if i == l then A[i*n+j] / A[i*n+e]
-         else if j == e then -A[i*n+e] * newAle
-         else A[i*n+j] - A[i*n+e] * A[l*n+j] / A[l*n+e]
-      else A[i*n+j]
+         else if i == l then A[A_inds[ins_i] + i*n+j] / A[A_inds[ins_i] + i*n+e]
+         else if j == e then -A[A_inds[ins_i] + i*n+e] * newAle
+         else A[A_inds[ins_i] + i*n+j] - A[A_inds[ins_i] + i*n+e] * A[A_inds[ins_i] + l*n+j] / A[A_inds[ins_i] + l*n+e]
+      else A[A_inds[ins_i] + i*n+j]
     ) instancesIndsMxN iotaMxNs
 
-  let vHats = map(\(_, _, c, v, _, e, i) -> unsafe if e!=(-1) then v + c[e] * newbs[i] else v) instances
+  let vHats = 
+    map(\i -> unsafe if es[i] != (-1) 
+      then vs[i] + cs[es[i]] * newbs[i] 
+      else vs[i]
+    ) (iota h)
 
   let cHats =
-    map(\instanceInd i ->
+    map(\ins_i i ->
       unsafe
-      let c = #3 instancesEL[instanceInd]
-      let l = #5 instancesEL[instanceInd]
-      let e = #6 instancesEL[instanceInd]
-      let n = ns[instanceInd]
+      let n = ns[ins_i]
+      let e = es[ins_i]
+      let l = ls[ins_i]
       in if e != (-1)
       then
         if i == e
-          then -c[e]*AHats[AHatsInds[instanceInd] + l*n+i]
-          else c[i]-c[e]*AHats[AHatsInds[instanceInd] + l*n+i]
-      else c[i]
+          then -cs[c_inds[ins_i] + e]*AHats[A_inds[instanceInd] + l*n+i]
+          else cs[c_inds[ins_i] + i]-cs[c_inds[ins_i] + e]*AHats[A_inds[instanceInd] + l*n+i]
+      else cs[c_inds[ins_i] + i]
     ) instancesIndsN iotaNs
 
-  in map(\i ->
-    unsafe
-    let A = AHats[AHatsInds[i]:AHatsInds[i] + mns[i]]
-    let b = bHats[bHatsInds[i]:bHatsInds[i] + ms[i]]
-    let c = cHats[cHatsInds[i]:cHatsInds[i] + ns[i]]
-    let v = vHats[i]
-    let e = #6 instancesEL[i]
-    in if e != (-1)
-    then
-      let e = entering_variable c
-      let l = leaving_variable A b e ns[i]
-      in (A,b,c,v,l,e)
-    else
-      let l = #5 instancesEL[i]
-      in (A,b,c,v,l,e)
-    ) (iota h)
+  in (As,bs,cs,vs)
 
-let multi_simplex (instances : []([]f32, []f32, []f32, f32)) =
-  let instancesEL = map(\(A, b, c, v) ->
-    let n = length c
-    let e = entering_variable c
-    let l = leaving_variable A b e n
-    in (A, b, c, v, l, e)) instances
-  let continue = reduce(\res e -> res || e) (false) (map(\(_,_,_,_,_,e)-> e != (-1)) instancesEL)
-  let (res, _) = loop (instancesEL, continue) while continue do
-    let res = multi_pivot instancesEL
-    let continue = reduce(\res e -> res || e) (false) (map(\(_,_,_,_,_,e)-> e != (-1)) instancesEL)
+let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
+  let vs = replicate h 0f32 --  assume instances start with 0 score
+  let instance_inds = iota h
+
+  let A_inds = scan_inc_to_exc (scan (+) 0 mns)
+  let b_inds = scan_inc_to_exc (scan (+) 0 ms)
+  let c_inds = scan_inc_to_exc (scan (+) 0 ns)
+
+  -- es
+  let ns_scan = scan (+) 0 ns
+  let inds_n  = scan_inc_to_exc ns_scan
+  let size_n  = last inds_n + last ns
+  let flag_n  = scatter (replicate size_n 0) inds_n (replicate h 1)
+  let iota_ns = sgm_scan_inc_to_exc flag_n (sgmSumI32 flag_n (replicate size_n 1))
+
+  let es      = entering_variables flag_n iota_ns ns_scan cs c_inds
+  -- es end
+
+  -- ls 
+  let ms_scan = scan (+) 0 ms
+  let inds_m  = scan_inc_to_exc ms_scan
+  let size_m  = last inds_m + last ms
+  let flag_m  = scatter (replicate size_m 0) inds_m (replicate h 1)
+  let iota_ms = sgm_scan_inc_to_exc flag_m (sgmSumI32 flag_m (replicate size_m 1))
+
+  let ls      = leaving_variables flag_m iota_ms ms_scan A A_inds b b_inds
+  -- ls end 
+
+  let continue = reduce (\res e -> res || e) (map(\e -> es != (-1)) es)
+  let (_,_,_,vs,_,_,_) = loop (As, bs, cs, vs, es, ls, continue) while continue do
+    let (As, bs, cs, vs) = multi_pivot As bs cs vs es ls ns ms
+    let es        = entering_variables flag_n iota_ns ns_scan cs c_inds
+    let ls        = leaving_variables flag_m iota_ms ms_scan A A_inds b b_inds
+    let continue  = reduce (\res e -> res || e) (map(\e -> es != (-1)) es)
     in (res, continue)
 	in map(\(_,_,_,v,_,_) -> v) res
 
-let main [h] [m] [n] (As:[h][m][n]f32) (bs:[h][m]f32) (cs:[h][n]f32) =
-  let flatAs = map (\a -> map (\i -> unsafe a[i / n, i % n]) (iota (m*n))) As
-  let instances = zip flatAs bs cs (replicate (length bs) 0f32)
-  let obj = multi_simplex(instances)
+-- As[h][n][m], bs[h][m], cs[h][n]
+let main [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32)  =
+  let obj = multi_simplex As bs cs ms ns
   in obj
+
+-- leaving
+  
