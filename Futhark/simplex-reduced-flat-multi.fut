@@ -41,33 +41,33 @@ let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (ins_inds_n:[]i32) (cs:[]f32)
 
 -- segmented scan for predicate all infinite. 
 -- Returns 0 on all inf, 1 otherwise
-let sgmAllInfI32 [n] (flg : [n]i32) (arr : [n]f32) : [n]i32 =
+let sgmAllInfI32 [n] (flg : [n]i32) (arr : [n]f32) : [n]f32 =
   let flgs_vals =
     scan ( \ (f1, acc) (f2, b) ->
             let f = f1 | f2 in
             if f2 > 0 then 
               if b == inf 
-                then (f, 0)
-                else (f, 1)
+                then (f, 0f32)
+                else (f, 1f32)
             else if b == inf 
               then (f, acc) 
-              else (f, 1))
-    (0, 0) (zip flg arr)
+              else (f, 1f32))
+    (0, 0f32) (zip flg arr)
   let (_, vals) = unzip flgs_vals
   in vals
 
 -- segmented scan which finds index with lowest fraction in deltas.
-let sgmMinFractI32 [n] (flg : [n]i32) (arr : [n]f32) (deltas : []f32) : []i32 =
+let sgmMinFractI32 [m] (flg : [m]i32) (arr : [m]i32) (ins_inds_m: []i32) (deltas : []f32) (delta_inds : []i32) : []i32 =
   let flgs_vals =
-    scan ( \ (f1, min) (f2, l) ->
+    scan ( \ (f1, min, _) (f2, l, ins_i) ->
             let f = f1 | f2 in
             if f2 > 0 
-              then (f, l) -- no min first element
-              else if delta[l] > delta[min] 
-                then (f, min) 
-                else (f, l))
-         (0, -1) (zip flg arr)
-  let (_, vals) = unzip flgs_vals
+              then (f, l, 0) -- always pick first element in sgm
+              else if deltas[delta_inds[ins_i] + l] > deltas[delta_inds[ins_i] + min] 
+                then (f, min, 0) 
+                else (f, l, 0))
+         (0, -1, 0) (zip flg arr ins_inds_m)
+  let (_, vals, _) = unzip flgs_vals
   in vals
 
 -- segmented scan with (+) on integers:
@@ -87,21 +87,22 @@ let sgm_scan_inc_to_exc [n] (flg : [n]i32) (arr:[n]i32) : [n]i32 =
 let scan_inc_to_exc [n] (arr:[n]i32) : [n]i32 =
   map (\i -> unsafe if (i==0) then 0 else arr[i-1]) (iota n)
 
-let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (cs:[]f32) (c_inds:[]i32): []i32 =
-  let e_scans = sgmLowestI32 flag_n iota_ns cs c_inds
+let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (ins_inds_n: []i32) (cs:[]f32) (c_inds:[]i32): []i32 =
+  let e_scans = sgmLowestI32 flag_n iota_ns ins_inds_n cs c_inds
   let es      = map(\i -> e_scans[i]) ns_scan --  maybe off by 1
   in es
 
-let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m : []i32) (ns:[]i32) (A:[]f32) (A_inds:[]i32) (b:[]f32) (b_inds:[]i32): []i32 =
+let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m : []i32) (ns:[]i32) (A:[]f32) (A_inds:[]i32) (b:[]f32) (b_inds:[]i32) (es:[]i32) : []i32 =
   let deltas  = 
-    map (\ins_i i -> unsafe if A[A_inds[ins_i] + i*ns[ins_i] + e] > 0f32 
-      then b[b_inds[ins_i] + j] / A[A_inds[ins_i] + i*ns[ins_i] + e] 
-      else inf
-    ) (ins_inds_m (iota m))
+    map (\(ins_i, i) -> unsafe if A[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] > 0f32 
+      then b[b_inds[ins_i] + i] / A[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] 
+      else inf) 
+    (zip ins_inds_m iota_ms)
   -- let inf_scan= sgmAllInfF32 flag_m deltas
   -- let infs    = map(\i -> inf_scan[i]) ms_scan
   let l_scans = sgmMinFractI32 flag_m iota_ms deltas
   let ls      = map(\i -> l_scans[i]) ms_scan -- maybe off by 1
+  in ls
 
 -- input is list of (A,b,c,v,l,e)
 let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls:[h]i32) (ns:[h]i32) (ms:[h]i32) =
@@ -223,15 +224,15 @@ let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   let iota_ms = sgm_scan_inc_to_exc flag_m (sgmSumI32 flag_m (replicate size_m 1))
   let ins_inds_m  = map (\x -> x-1) (scan (+) 0 flag_m)
 
-  let ls          = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns A A_inds b b_inds
+  let ls      = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns A A_inds b b_inds
   -- ls end 
 
-  let continue = reduce (\res e -> res || e) (map(\e -> es != (-1)) es)
-  let (_,_,_,vs,_,_,_) = loop (As, bs, cs, vs, es, ls, continue) while continue do
-    let (As, bs, cs, vs) = multi_pivot As bs cs vs es ls ns ms
+  let continue = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
+  let (_,_,_,vs,_,_,_)    = loop (As, bs, cs, vs, es, ls, continue) while continue do
+    let (As, bs, cs, vs)  = multi_pivot As bs cs vs es ls ns ms
     let es        = entering_variables flag_n iota_ns ns_scan cs c_inds
     let ls        = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns A A_inds b b_inds
-    let continue  = reduce (\res e -> res || e) (map(\e -> es != (-1)) es)
+    let continue  = reduce (\res e -> res || e) (false) (map(\e -> es != (-1)) es)
     in (As,bs,cs,vs,es,ls, continue)
 	in vs
 
