@@ -14,24 +14,24 @@ public class InstanceGenerator {
     }
 
     private SimplexInstance initializeFormulation(int variableNumber, int constraintNumber) {
-        float[][] constraints = new float[constraintNumber][variableNumber];
-        float[] initialCoefficients = new float[variableNumber];
-        float[] initialConstants = new float[constraintNumber];
+        int[][] constraints = new int[constraintNumber][variableNumber];
+        int[] initialCoefficients = new int[variableNumber];
+        int[] initialConstants = new int[constraintNumber];
 
         // Initialize coefficients of the objective function
         for (int i = 0; i < variableNumber; i++) {
-            initialCoefficients[i] = random.nextFloat() * 100;
+            initialCoefficients[i] = random.nextInt(101);
         }
 
         // initialize constants of the constraints
         for (int i = 0; i < constraintNumber; i++) {
-            initialConstants[i] = random.nextFloat() * 100;
+            initialConstants[i] = random.nextInt(101);
         }
 
         // initialize the coefficients of the constraints
         for (int i = 0; i < constraintNumber; i++) {
             for (int j = 0; j < variableNumber; j++) {
-                constraints[i][j] = random.nextFloat() * 100;
+                constraints[i][j] = random.nextInt(101);
             }
         }
         return new SimplexInstance(constraints, initialConstants, initialCoefficients);
