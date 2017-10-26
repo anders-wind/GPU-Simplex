@@ -7,8 +7,8 @@
 -- cs are lists of the objective coefficients (n length)
 --
 -- ==
--- nobench input @tests/test_in.txt
--- output @tests/test_out.txt
+-- nobench input @tests/multi_test_in.txt
+-- output @tests/multi_test_out.txt
 --
 -- compiled input @tests/gen_test_in.txt
 -- output @tests/gen_test_out.txt
@@ -22,7 +22,7 @@ default(f32)
 let inf : f32 = 1000000f32
 
 -- segmented scan for first positive number in flat cs with c_inds 
-let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (ins_inds_n:[]i32) (cs:[]f32) (c_inds:[]i32) : [n]i32 =
+let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (ins_inds_n:[n]i32) (cs:[]f32) (c_inds:[]i32) : [n]i32 =
   let flgs_vals =
     scan ( \ (f1, res, _) (f2, j, ins_i) ->
             let f = f1 | f2 in
@@ -89,7 +89,7 @@ let scan_inc_to_exc [n] (arr:[n]i32) : [n]i32 =
 
 let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (ins_inds_n: []i32) (cs:[]f32) (c_inds:[]i32): []i32 =
   let e_scans = sgmLowestI32 flag_n iota_ns ins_inds_n cs c_inds
-  let es      = map(\i -> e_scans[i]) ns_scan --  maybe off by 1
+  let es      = map(\i -> e_scans[i-1]) ns_scan
   in es
 
 let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m : []i32) (ns:[]i32) (A:[]f32) (A_inds:[]i32) (b:[]f32) (b_inds:[]i32) (es:[]i32) : []i32 =
@@ -101,7 +101,7 @@ let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m
   -- let inf_scan= sgmAllInfF32 flag_m deltas
   -- let infs    = map(\i -> inf_scan[i]) ms_scan
   let l_scans = sgmMinFractI32 flag_m iota_ms ins_inds_m deltas ins_inds_m -- maybe delta_inds is something else
-  let ls      = map(\i -> l_scans[i]) ms_scan -- maybe off by 1
+  let ls      = map(\i -> l_scans[i-1]) ms_scan
   in ls
 
 -- input is list of (A,b,c,v,l,e)
@@ -202,7 +202,6 @@ let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls
 let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   let vs = replicate h 0f32 --  assume instances start with 0 score
   let mns = map (*) ns ms
-  let ins_inds = iota h
 
   let A_inds = scan_inc_to_exc (scan (+) 0 mns)
   let b_inds = scan_inc_to_exc (scan (+) 0 ms)
@@ -214,8 +213,9 @@ let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   let size_n  = last inds_n + last ns
   let flag_n  = scatter (replicate size_n 0) inds_n (replicate h 1)
   let iota_ns = sgm_scan_inc_to_exc flag_n (sgmSumI32 flag_n (replicate size_n 1))
+  let ins_inds_n  = map (\x -> x-1) (scan (+) 0 flag_n)
 
-  let es      = entering_variables flag_n iota_ns ns_scan ins_inds cs c_inds
+  let es      = entering_variables flag_n iota_ns ns_scan ins_inds_n cs c_inds
   -- es end
 
   -- ls 
@@ -232,7 +232,7 @@ let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   let continue = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
   let (_,_,_,vs,_,_,_)    = loop (As, bs, cs, vs, es, ls, continue) while continue do
     let (As, bs, cs, vs)  = multi_pivot As bs cs vs es ls ns ms
-    let es        = entering_variables flag_n iota_ns ns_scan ins_inds cs c_inds
+    let es        = entering_variables flag_n iota_ns ns_scan ins_inds_n cs c_inds
     let ls        = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns As A_inds bs b_inds es
     let continue  = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
     in (As,bs,cs,vs,es,ls, continue)
