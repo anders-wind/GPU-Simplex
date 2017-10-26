@@ -58,7 +58,9 @@ let entering_variable [n] (c : [n]f32) : i32 =
 
 let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) : i32 =
   let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else inf) (iota m)
-  in reduce
+  let all_inf = reduce (\acc b -> if b == inf then acc else 1f32) 0f32 delta
+  in if all_inf == 0f32 then -1 else
+     reduce
        (\min l -> unsafe if min != -1 && delta[l] > delta[min] then min else l)
        (-1)
        (iota m)
