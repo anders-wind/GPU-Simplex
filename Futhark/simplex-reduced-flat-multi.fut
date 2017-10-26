@@ -51,37 +51,6 @@ let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) :
       (-1)
       (iota m)
 
-let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32) (e:i32) =
-  -- new constraint values
-  let newb = b[l]/A[l*n+e]
-  let bHat =
-    map
-      (\i -> unsafe if i == l then newb else b[i]-A[i*n+e]*newb)
-      (iota m)
-
-  -- new constraint coefficients
-  let newAle = 1f32/A[l*n+e]
-  let AHat =
-    map
-      (\ind ->
-         unsafe
-         let (i,j) = (ind / n, ind % n)
-         in if i == l && j == e then newAle
-         else if i == l then A[l*n+j] / A[l*n+e]
-         else if j == e then -A[i*n+e] * newAle
-         else A[i*n+j] - A[i*n+e] * A[l*n+j] / A[l*n+e]
-      )
-      (iota (m*n))
-
-  -- new objective function
-  let vHat = v + c[e] * newb
-  let cHat =
-    map
-      (\i -> unsafe if i == e then -c[e]*AHat[l*n+i] else c[i]-c[e]*AHat[l*n+i])
-      (iota n)
-
-  in (AHat, bHat, cHat, vHat)
-
 -- input is list of (A,b,c,v,l,e)
 let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h]([]f32, []f32, []f32, f32, i32, i32) =
   -- let instances = filter(\(A, b, c, v, l, e) -> e != (-1)) instancesEL
@@ -195,17 +164,6 @@ let multi_pivot [h] (instancesEL:[h]([]f32, []f32, []f32, f32, i32, i32)) : [h](
       let l = #5 instancesEL[i]
       in (A,b,c,v,l,e)
     ) (iota h)
-
-let simplex [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
-  let e = entering_variable c
-  let (_,b,_,v,_) = loop (A,b,c,v,e) while e != -1 do
-    let l = leaving_variable A b e n
-    -- should have a check for if l == -1 here, but it will throw out of
-    -- bounds error if not, so that'll do as our "Unbounded" result for now
-    let (A,b,c,v) = pivot A b c v l e
-    let e = entering_variable c
-    in (A,b,c,v,e)
-  in (v, b)
 
 let multi_simplex (instances : []([]f32, []f32, []f32, f32)) =
   let instancesEL = map(\(A, b, c, v) ->
