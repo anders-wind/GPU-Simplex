@@ -4,9 +4,15 @@ public class InstanceGenerator {
     private Random random = new Random();
     private SimplexSolver simplexSolver = new SimplexSolver();
 
-    public SimplexInstance generate(int variableNumber, int constraintNumber){
-        SimplexInstance instance = initializeFormulation(variableNumber, constraintNumber);
+    public SimplexInstance generate(int variableLowNumber,
+            int variableHighNumber, int constraintLowNumber, int constraintHighNumber) {
 
+        int variableNumber = random.nextInt(variableHighNumber-variableLowNumber+1)
+            + variableLowNumber;
+        int constraintNumber = random.nextInt(constraintHighNumber-constraintLowNumber+1)
+            + constraintLowNumber;
+
+        SimplexInstance instance = initializeFormulation(variableNumber, constraintNumber);
         float expectedObjective = simplexSolver.solveSimplex(instance);
         instance.setExpectedObjective(expectedObjective);
 
@@ -14,6 +20,7 @@ public class InstanceGenerator {
     }
 
     private SimplexInstance initializeFormulation(int variableNumber, int constraintNumber) {
+
         int[][] constraints = new int[constraintNumber][variableNumber];
         int[] initialCoefficients = new int[variableNumber];
         int[] initialConstants = new int[constraintNumber];

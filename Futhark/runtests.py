@@ -36,7 +36,8 @@ def arrange_test_data(testfile,tin,tout):
     subprocess.call('mv '+rfile+' '+tout, shell=True)
 
 def generate_test_data(filename,n,v,c):
-    strc = 'make -C ../Simplex\ Instance\ Generator -s run N={0} V={1} C={2} > {3}'
+    strc = 'make -C ../Simplex\ Instance\ Generator -s run\
+            N={0} VLOW={1} VHIGH={1} CLOW={2} CHIGH={2} > {3}'
     cmd = strc.format(n,v,c,filename)
     subprocess.call(cmd, shell=True)
 
@@ -78,14 +79,14 @@ def doit(args):
             print 'Testing all files'
             run_tests(glob.glob('./*.fut'), compiler)
         elif args.test:
-            print ('Testing one file: ' + args.test, compiler)
-            run_tests([args.test])
+            print ('Testing one file: ' + args.test)
+            run_tests([args.test], compiler)
         elif args.bench_all:
             print 'Benchmarking all files'
             run_benches(glob.glob('./*.fut'), compiler)
         elif args.bench:
-            print ('Benchmarking one file: ' + args.bench, compiler)
-            run_benches([args.bench])
+            print ('Benchmarking one file: ' + args.bench)
+            run_benches([args.bench], compiler)
         else:
             print 'Default: Testing all files'
             run_tests(glob.glob('./*.fut'), compiler)
