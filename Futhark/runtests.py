@@ -35,28 +35,29 @@ def arrange_test_data(testfile,tin,tout):
     subprocess.call('cat '+afile+' '+bfile+' '+cfile+' > '+tin, shell=True)
     subprocess.call('mv '+rfile+' '+tout, shell=True)
 
-def generate_test_data(filename,n,v,c):
+def generate_test_data(filename,n,(vl,vh),(cl,ch)):
     strc = 'make -C ../Simplex\ Instance\ Generator -s run\
-            N={0} VLOW={1} VHIGH={1} CLOW={2} CHIGH={2} > {3}'
-    cmd = strc.format(n,v,c,filename)
+            N={0} VLOW={1} VHIGH={2} CLOW={3} CHIGH={4} > {5}'
+    cmd = strc.format(n,vl,vh,cl,ch,filename)
     subprocess.call(cmd, shell=True)
 
-def run_tests(files, compiler):
+def run_futhark(prog, files, compiler):
     for f in files:
         if os.path.isfile(f):
-            subprocess.call('futhark-test --compiler='+compiler+' '+f, shell=True)
+            cmd = 'futhark-{0} --compiler={1} {2}'.format(prog, compiler, f)
+            subprocess.call(cmd, shell=True)
         else:
-            print ("File doesn't exist: " + f)
+            print("File doesn't exist: {0}".format(f))
+
+def run_tests(files, compiler):
+    run_futhark('test', files, compiler)
 
 def run_benches(files, compiler):
-    for f in files:
-        if os.path.isfile(f):
-            subprocess.call('futhark-bench --compiler='+compiler+' '+f, shell=True)
-        else:
-            print ("File doesn't exist: " + f)
+    run_futhark('bench', files, compiler)
 
 def cleanup():
-    subprocess.call('rm -f '+tmp_prefix+'*', shell=True)
+    cmd = 'rm -f {0}*'.format(tmp_prefix)
+    subprocess.call(cmd, shell=True)
 
 def doit(args):
     try:
@@ -93,6 +94,15 @@ def doit(args):
     finally:
         cleanup()
 
+def int_tuple(string):
+    spl = string.split(",")
+    if len(spl) != 2:
+        raise argparse.ArgumentTypeError("arg {0} should be a range a,b".format(string))
+    try:
+        return int(spl[0]),int(spl[1])
+    except TypeError:
+        raise argparse.ArgumentTypeError("range {0} must be integers".format(string))
+
 def main():
     parser = argparse.ArgumentParser(description='Test the Futhark Simplex suite.')
     parser.add_argument('-a','--test-all', help='Test all versions',action='store_true')
@@ -100,8 +110,8 @@ def main():
     parser.add_argument('-e','--bench-all', help='Benchmark all versions',action='store_true')
     parser.add_argument('-b','--bench', help='Benchmark one file')
     parser.add_argument('-n','--number', help='Number of instances to generate.', type=int, default=5)
-    parser.add_argument('-v','--variables', help='Number of variables in each instance', type=int, default=5)
-    parser.add_argument('-c','--constraints', help='Number of constraints in each instance', type=int, default=5)
+    parser.add_argument('-v','--variables', help='Range of variable numbers (n)', type=int_tuple, default=(5,5))
+    parser.add_argument('-c','--constants', help='Range of constant numbers (m)', type=int_tuple, default=(5,5))
     parser.add_argument('-x','--no-test-bench', help='Only generate test data', action='store_true')
     parser.add_argument('-y','--no-gen', help='Do not generate test data', action='store_true')
     parser.add_argument('-p','--compiler', help='Which Futhark compiler to use', default='futhark-c')
