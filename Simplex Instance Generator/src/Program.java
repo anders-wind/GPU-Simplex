@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class Program {
 
@@ -28,6 +29,16 @@ public class Program {
                 instances.add(instanceGenerator.generate(variableLowNumber,
                             variableHighNumber, constraintLowNumber, constraintHighNumber));
             }
+
+            SimplexSolver simplexSolver = new SimplexSolver();
+            BiConsumer<List<SimplexInstance>, Benchmark.Timer> obj = ((insts, timer) ->
+                insts.forEach((inst) -> {
+                    float res = simplexSolver.solveSimplex(inst, timer);
+                    inst.setExpectedObjective(res);
+                }));
+
+            // benchmark avg time needed to execute cplex.solve() for n instances
+            Benchmark.benchmark("Simplex solver", obj, instances);
 
             for (SimplexInstance instance : instances) {
                 System.out.println(instance);

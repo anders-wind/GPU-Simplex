@@ -2,7 +2,6 @@ import java.util.Random;
 
 public class InstanceGenerator {
     private Random random = new Random();
-    private SimplexSolver simplexSolver = new SimplexSolver();
 
     public SimplexInstance generate(int variableLowNumber,
             int variableHighNumber, int constraintLowNumber, int constraintHighNumber) {
@@ -13,9 +12,6 @@ public class InstanceGenerator {
             + constraintLowNumber;
 
         SimplexInstance instance = initializeFormulation(variableNumber, constraintNumber);
-        float expectedObjective = simplexSolver.solveSimplex(instance);
-        instance.setExpectedObjective(expectedObjective);
-
         return instance;
     }
 

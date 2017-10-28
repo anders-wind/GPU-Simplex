@@ -5,7 +5,7 @@ import ilog.cplex.IloCplex;
 
 public class SimplexSolver {
 
-    public float solveSimplex(SimplexInstance instance) {
+    public float solveSimplex(SimplexInstance instance, Benchmark.Timer timer) {
         float expectedObjective = 0;
         int variableNumber = instance.getVariableNumber(), constraintNumber = instance.getConstrainNumber();
         try {
@@ -31,8 +31,10 @@ public class SimplexSolver {
             }
 
             // Solve the formulation
+            if (timer != null) timer.play();
             boolean solved = cplex.solve();
-            if(solved){
+            if (timer != null) timer.pause();
+            if (solved) {
                 if(cplex.getCplexStatus().equals(IloCplex.CplexStatus.Infeasible))
                     System.err.println("Was infeasible");
                 else if(cplex.getCplexStatus().equals(IloCplex.CplexStatus.Unbounded))
@@ -44,5 +46,9 @@ public class SimplexSolver {
             e.printStackTrace();
         }
         return expectedObjective;
+    }
+
+    public float solveSimplex(SimplexInstance instance) {
+        return solveSimplex(instance, null);
     }
 }
