@@ -1,6 +1,5 @@
 -- Implementation of Simplex: reduced, flat representation
 --
--- Only works on regular arrays, i.e. all instances need to be same size
 -- main As bs cs = lists of optimal objective values
 -- As are lists of the constraint coefficients (flattened m*n length)
 -- bs are lists of the constraint values (m length)
@@ -10,10 +9,8 @@
 -- nobench input @tests/multi_test_in.txt
 -- output @tests/multi_test_out.txt
 --
--- compiled input @tests/gen_test_in.txt
--- output @tests/gen_test_out.txt
-
--- TODO change to use multi_* tests with complete flattening
+-- compiled input @tests/multi_gen_test_in.txt
+-- output @tests/multi_gen_test_out.txt
 
 default(i32)
 default(f32)

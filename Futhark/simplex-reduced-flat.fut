@@ -9,8 +9,9 @@
 -- ==
 -- nobench input @tests/flat_test_in.txt
 -- output @tests/flat_test_out.txt
-
--- TODO: change runtests.py to generate flat_* tests
+--
+-- compiled input @tests/flat_gen_test_in.txt
+-- output @tests/flat_gen_test_out.txt
 
 default(i32)
 default(f32)

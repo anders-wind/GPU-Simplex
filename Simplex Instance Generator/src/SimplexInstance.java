@@ -31,7 +31,7 @@ public class SimplexInstance {
     public String coefficientsString() {
         StringBuilder coefficientsString = new StringBuilder("[");
         for (int i = 0; i < coefficients.length; i++) {
-            coefficientsString.append(coefficients[i]).append("f32");
+            coefficientsString.append(coefficients[i]);
             if(i < coefficients.length -1 )
                 coefficientsString.append(",");
         }
@@ -42,7 +42,7 @@ public class SimplexInstance {
     public String constantsString() {
         StringBuilder constantsString = new StringBuilder("[");
         for (int i = 0; i < constants.length; i++) {
-            constantsString.append(constants[i]).append("f32");
+            constantsString.append(constants[i]);
             if(i < constants.length -1)
                 constantsString.append(",");
         }
@@ -57,7 +57,7 @@ public class SimplexInstance {
             if (!flat)
                 constraintString.append("[");
             for (int j = 0; j < constraints[i].length; j++) {
-                constraintString.append(constraints[i][j]).append("f32");
+                constraintString.append(constraints[i][j]);
                 if (j < constraints[i].length-1)
                     constraintString.append(",");
             }
@@ -72,12 +72,14 @@ public class SimplexInstance {
     }
 
     public String expectedObjectiveString() {
-        return expectedObjective + "f32";
+        return Float.toString(expectedObjective);
     }
 
     @Override
     public String toString() {
-        return String.format("%s\n%s\n%s\n%s",
+        return String.format("(%d,%d)\n%s\n%s\n%s\n%s",
+                getVariableNumber(),
+                getConstrainNumber(),
                 constraintsString(false),
                 constantsString(),
                 coefficientsString(),
