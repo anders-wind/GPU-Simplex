@@ -97,7 +97,7 @@ let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m
     (zip ins_inds_m iota_ms)
   -- let inf_scan= sgmAllInfF32 flag_m deltas
   -- let infs    = map(\i -> inf_scan[i]) ms_scan
-  let l_scans = sgmMinFractI32 flag_m iota_ms ins_inds_m deltas ins_inds_m -- maybe delta_inds is something else
+  let l_scans = sgmMinFractI32 flag_m iota_ms ins_inds_m deltas b_inds
   let ls      = map(\i -> l_scans[i-1]) ms_scan
   in ls
 
