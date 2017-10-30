@@ -21,7 +21,7 @@ let inf : f32 = 1000000f32
 -- segmented scan for first positive number in flat cs with c_inds
 let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (ins_inds_n:[n]i32) (cs:[]f32) (c_inds:[]i32) : [n]i32 =
   let flgs_vals =
-    scan ( \ (f1, res, _) (f2, j, ins_i) ->
+    scan ( \ (f1, res, _) (f2, j, ins_i) -> unsafe
             let f = f1 | f2 in
             if f2 > 0 then
               if cs[c_inds[ins_i] + j] > 0f32
@@ -56,7 +56,7 @@ let sgmAllInfI32 [n] (flg : [n]i32) (arr : [n]f32) : [n]f32 =
 -- segmented scan which finds index with lowest fraction in deltas.
 let sgmMinFractI32 [m] (flg : [m]i32) (arr : [m]i32) (ins_inds_m: []i32) (deltas : []f32) (delta_inds : []i32) : []i32 =
   let flgs_vals =
-    scan ( \ (f1, min, _) (f2, l, ins_i) ->
+    scan ( \ (f1, min, _) (f2, l, ins_i) -> unsafe
             let f = f1 | f2 in
             if f2 > 0
               then (f, l, 0) -- always pick first element in sgm
@@ -86,7 +86,7 @@ let scan_inc_to_exc [n] (arr:[n]i32) : [n]i32 =
 
 let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (ins_inds_n: []i32) (cs:[]f32) (c_inds:[]i32): []i32 =
   let e_scans = sgmLowestI32 flag_n iota_ns ins_inds_n cs c_inds
-  let es      = map(\i -> e_scans[i-1]) ns_scan
+  let es      = map(\i -> unsafe e_scans[i-1]) ns_scan
   in es
 
 let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m : []i32) (ns:[]i32) (As:[]f32) (A_inds:[]i32) (bs:[]f32) (b_inds:[]i32) (es:[]i32) : []i32 =
@@ -98,7 +98,7 @@ let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m
   -- let inf_scan= sgmAllInfF32 flag_m deltas
   -- let infs    = map(\i -> inf_scan[i]) ms_scan
   let l_scans = sgmMinFractI32 flag_m iota_ms ins_inds_m deltas b_inds
-  let ls      = map(\i -> l_scans[i-1]) ms_scan
+  let ls      = map(\i -> unsafe l_scans[i-1]) ms_scan
   in ls
 
 -- input is list of (A,b,c,v,l,e)
