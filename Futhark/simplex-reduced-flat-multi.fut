@@ -84,6 +84,23 @@ let sgm_scan_inc_to_exc [n] (flg : [n]i32) (arr:[n]i32) : [n]i32 =
 let scan_inc_to_exc [n] (arr:[n]i32) : [n]i32 =
   map (\i -> unsafe if (i==0) then 0 else arr[i-1]) (iota n)
 
+-- indices of a flattened array
+type flat_index =
+  { sizes: []i32            -- array of sizes of each segment (aka shape) [3,2,5,...]
+  , segment_indices: []i32  -- array of flat indices of each segment start [0,3,5,...]
+  , segment_iotas: []i32    -- array of iotas for each segment [0,1,2,0,1,0,1,...]
+  , segment_numbers: []i32  -- array of the instance number for each segment [0,0,0,1,1,2,2,...]
+  }
+
+let make_flat_index [h] (sizes: [h]i32) =
+  let sizes_scan = scan (+) 0 sizes
+  let segment_indices = scan_inc_to_exc sizes_scan
+  let full_size = last sizes_scan
+  let flags = scatter (replicate full_size 0) segment_indices (replicate h 1)
+  let segment_iotas = sgm_scan_inc_to_exc flags (sgmSumI32 flags (replicate full_size 1))
+  let segment_numbers = map (\x -> x-1) (scan (+) 0 flags)
+  in { sizes=sizes, segment_indices=segment_indices, segment_iotas=segment_iotas, segment_numbers=segment_numbers }
+
 let entering_variables (flag_n:[]i32) (iota_ns:[]i32) (ns_scan:[]i32) (ins_inds_n: []i32) (cs:[]f32) (c_inds:[]i32): []i32 =
   let e_scans = sgmLowestI32 flag_n iota_ns ins_inds_n cs c_inds
   let es      = map(\i -> unsafe e_scans[i-1]) ns_scan
@@ -101,41 +118,22 @@ let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m
   let ls      = map(\i -> unsafe l_scans[i-1]) ms_scan
   in ls
 
--- input is list of (A,b,c,v,l,e)
-let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls:[h]i32) (ms:[h]i32) (ns:[h]i32) =
-  let mns = map (*) ns ms
-
-  let A_inds = scan_inc_to_exc (scan (+) 0 mns)
-  let b_inds = scan_inc_to_exc (scan (+) 0 ms)
-  let c_inds = scan_inc_to_exc (scan (+) 0 ns)
+let multi_pivot [h]
+      (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32)
+      (es:[h]i32) (ls:[h]i32)
+      (m_index: flat_index) (n_index: flat_index) (mxn_index: flat_index) =
 
   let instance_iota = iota h
+
+  let {sizes=_, segment_indices=b_inds, segment_iotas=iotaMs, segment_numbers=instancesIndsM} = m_index
+  let {sizes=ns, segment_indices=c_inds, segment_iotas=iotaNs, segment_numbers=instancesIndsN} = n_index
+  let {sizes=_, segment_indices=A_inds, segment_iotas=iotaMxNs, segment_numbers=instancesIndsMxN} = mxn_index
 
   let newbs =
     map(\i-> unsafe if es[i] != (-1)
       then bs[b_inds[i] + ls[i]]/As[A_inds[i] + ls[i]*ns[i] + es[i]]
       else 0f32
     ) instance_iota
-
-  -- we should reuse this
-  let indsM     = scan_inc_to_exc (scan (+) 0 ms)
-  let sizeM     = last indsM + last ms
-  let flagM     = scatter (replicate sizeM 0) indsM (replicate h 1)
-  let iotaMs    = sgm_scan_inc_to_exc flagM (sgmSumI32 flagM (replicate sizeM 1))
-
-  let indsN     = scan_inc_to_exc (scan (+) 0 ns)
-  let sizeN     = last indsN + last ns
-  let flagN     = scatter (replicate sizeN 0) indsN (replicate h 1)
-  let iotaNs    = sgm_scan_inc_to_exc flagN (sgmSumI32 flagN (replicate sizeN 1))
-
-  let indsMxN   = scan_inc_to_exc (scan (+) 0 mns)
-  let sizeMxN   = last indsMxN + last mns
-  let flagMxN   = scatter (replicate sizeMxN 0) indsMxN (replicate h 1)
-  let iotaMxNs  = sgm_scan_inc_to_exc flagMxN (sgmSumI32 flagMxN (replicate sizeMxN 1))
-
-  let instancesIndsM    = map (\x -> x-1) (scan (+) 0 flagM)
-  let instancesIndsN    = map (\x -> x-1) (scan (+) 0 flagN)
-  let instancesIndsMxN  = map (\x -> x-1) (scan (+) 0 flagMxN)
 
   let bHats =
     map(\ins_i i ->
@@ -198,19 +196,22 @@ let multi_pivot [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (vs:[h]f32) (es:[h]i32) (ls
 
 let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   let vs = replicate h 0f32 --  assume instances start with 0 score
-  let mns = map (*) ns ms
 
-  let A_inds = scan_inc_to_exc (scan (+) 0 mns)
-  let b_inds = scan_inc_to_exc (scan (+) 0 ms)
-  let c_inds = scan_inc_to_exc (scan (+) 0 ns)
+  let m_index = make_flat_index ms
+  let n_index = make_flat_index ns
+  let mxn_index = make_flat_index (map (*) ms ns)
+
+  let A_inds = #segment_indices mxn_index
+  let b_inds = #segment_indices m_index
+  let c_inds = #segment_indices n_index
 
   -- es
   let ns_scan = scan (+) 0 ns
   let inds_n  = scan_inc_to_exc ns_scan
-  let size_n  = last inds_n + last ns
+  let size_n  = last ns_scan
   let flag_n  = scatter (replicate size_n 0) inds_n (replicate h 1)
-  let iota_ns = sgm_scan_inc_to_exc flag_n (sgmSumI32 flag_n (replicate size_n 1))
-  let ins_inds_n  = map (\x -> x-1) (scan (+) 0 flag_n)
+  let iota_ns = #segment_iotas n_index
+  let ins_inds_n  = #segment_numbers n_index
 
   let es      = entering_variables flag_n iota_ns ns_scan ins_inds_n cs c_inds
   -- es end
@@ -218,24 +219,23 @@ let multi_simplex [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32) =
   -- ls
   let ms_scan = scan (+) 0 ms
   let inds_m  = scan_inc_to_exc ms_scan
-  let size_m  = last inds_m + last ms
+  let size_m  = last ms_scan
   let flag_m  = scatter (replicate size_m 0) inds_m (replicate h 1)
-  let iota_ms = sgm_scan_inc_to_exc flag_m (sgmSumI32 flag_m (replicate size_m 1))
-  let ins_inds_m  = map (\x -> x-1) (scan (+) 0 flag_m)
+  let iota_ms = #segment_iotas m_index
+  let ins_inds_m = #segment_numbers m_index
 
   let ls      = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns As A_inds bs b_inds es
   -- ls end
 
   let continue = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
   let (_,_,_,vs,_,_,_)    = loop (As, bs, cs, vs, es, ls, continue) while continue do
-    let (As, bs, cs, vs)  = multi_pivot As bs cs vs es ls ms ns
+    let (As, bs, cs, vs)  = multi_pivot As bs cs vs es ls m_index n_index mxn_index
     let es        = entering_variables flag_n iota_ns ns_scan ins_inds_n cs c_inds
     let ls        = leaving_variables flag_m iota_ms ms_scan ins_inds_m ns As A_inds bs b_inds es
     let continue  = reduce (\res e -> res || e) (false) (map(\e -> e != (-1)) es)
     in (As,bs,cs,vs,es,ls, continue)
-	in vs
+  in vs
 
 -- As[h][n][m], bs[h][m], cs[h][n]
 let main [h] (As:[]f32) (bs:[]f32) (cs:[]f32) (ms:[h]i32) (ns:[h]i32)  =
-  let obj = multi_simplex As bs cs ms ns
-  in obj
+  multi_simplex As bs cs ms ns
