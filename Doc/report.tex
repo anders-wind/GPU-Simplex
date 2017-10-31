@@ -1,0 +1,44 @@
+% !TeX spellcheck = en_GB
+\documentclass{article}
+
+\usepackage{float}
+\usepackage[hidelinks,breaklinks=true]{hyperref}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{tabu}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+%\usepackage[colorinlistoftodos,]{todonotes}
+%\presetkeys{todonotes}{inline}{}
+\usepackage{cite}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage{pdfpages}
+\usepackage{listingsutf8}
+
+
+\newcommand{\newpar}{\bigskip\noindent}
+\bibliographystyle{plain}
+
+\author{Anders Wind Steffensen (qrj741@alumni.ku.dk) \and Chi xxx (xxx@alumni.ku.dk) \and Michael yyy (yyy@alumni.ku.dk)}
+\title{%
+	GPU Simplex \\
+	\large Programming Massively Parallel Hardware - Project}
+\date{03-11-2017}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+\input{introduction}
+
+\input{preliminary}
+
+\input{implementation}
+
+\input{benchmarks}
+
+\input{conclusion}
+
+\end{document}
