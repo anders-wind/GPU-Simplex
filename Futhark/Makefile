@@ -4,6 +4,8 @@ default: $(SRC:.fut=-c)
 
 opencl: $(SRC:.fut=-opencl)
 
+all: default opencl
+
 %-c: %.fut
 	futhark-c $< -o $@
 
@@ -16,4 +18,4 @@ test: $(SRC)
 clean:
 	rm -f *-c *-opencl *.c *expected* *actual* *.bin
 
-.PHONY=default opencl test clean
+.PHONY=all default opencl test clean

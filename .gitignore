@@ -93,3 +93,5 @@ Simplex Instance Generator/.idea/workspace.xml
 *expected*
 Futhark/tests/*gen_test_in.txt
 Futhark/tests/*gen_test_out.txt
+Futhark/*c
+Futhark/prototypes/*c
