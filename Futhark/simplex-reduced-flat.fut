@@ -16,9 +16,6 @@
 default(i32)
 default(f32)
 
--- hack
-let inf : f32 = 1000000f32
-
 let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32) (e:i32) =
   -- new constraint values
   let newb = b[l]/A[l*n+e]
@@ -65,14 +62,14 @@ let entering_variable [n] (c : [n]f32) : i32 =
   in vals
 
 let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) : i32 =
-  let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else inf) (iota m)
+  let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else f32.inf) (iota m)
   let (vals,_) =
     reduce
       (\(acc_index,acc_val) (index,vall) ->
-        if acc_val == inf && vall == inf then (-1,inf)
-        else if acc_val == inf || vall < acc_val then (index,vall)
+        if acc_val == f32.inf && vall == f32.inf then (-1,f32.inf)
+        else if acc_val == f32.inf || vall < acc_val then (index,vall)
         else (acc_index, acc_val))
-      (-1,inf)
+      (-1,f32.inf)
       (zip (iota m) delta)
   in vals
 

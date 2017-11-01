@@ -15,9 +15,6 @@
 default(i32)
 default(f32)
 
--- hack
-let inf : f32 = 1000000f32
-
 -- segmented scan for first positive number in flat cs with c_inds
 let sgmLowestI32 [n] (flg : [n]i32) (arr : [n]i32) (cs:[]f32) : [n]i32 =
   let flgs_vals =
@@ -44,12 +41,12 @@ let sgmMinFractI32 [m] (flags : [m]i32) (iotas : [m]i32) (deltas : []f32) : []i3
       (\(f1, acc_index, acc_val) (f2, index, vall) ->
         let f = f1 | f2 in
         -- both are invalid elements (neutral or inf)
-        if acc_val == inf && vall == inf then (f,-1,inf)
+        if acc_val == f32.inf && vall == f32.inf then (f,-1,f32.inf)
         -- sgm start, left is neutral, or left is bigger
         else if f2 > 0 || acc_index == (-1) || vall < acc_val then (f,index,vall)
-	-- left was smaller
+        -- left was smaller
         else (f,acc_index,acc_val))
-      (0, -1, inf) -- neutral element defined by value = inf
+      (0, -1, f32.inf) -- neutral element defined by value = inf
       (zip flags iotas deltas)
   let (_, vals, _) = unzip flgs_vals
   in vals
@@ -98,7 +95,7 @@ let leaving_variables (flag_m:[]i32) (iota_ms:[]i32) (ms_scan:[]i32) (ins_inds_m
       (\ins_i i ->
         unsafe
         let a = As[A_inds[ins_i] + i*ns[ins_i] + es[ins_i]] in
-        if a > 0f32 then bs[b_inds[ins_i] + i]/a else inf)
+        if a > 0f32 then bs[b_inds[ins_i] + i]/a else f32.inf)
       ins_inds_m iota_ms
   let l_scans = sgmMinFractI32 flag_m iota_ms deltas in
   map(\i -> unsafe l_scans[i-1]) ms_scan
