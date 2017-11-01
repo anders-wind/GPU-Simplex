@@ -5,12 +5,17 @@ A simplex test instance consists of the coefficient vector, the constraints matr
 
 The instance generator can be used to generate multiple instances of multiple sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations.
 
+\todo[inline]{maybe something on flattening input}
+
 \subsection{Parallel on Multiple Instances}
-Parallel map outside
+Given multiple instances of linear programs, each can be solved independently. This allows for a trivial parallism where each solution is solved in parallel which corresponds to a map over the instances with the simplex solver as operator. Since only one dimension is to be computed in parallel it is not necessary to flatten the input. For this type of parallelism to be performant the number of instances must be near or exceed the number of threads the GPU has to offer - whereas a small number of instances would not utilize the level of parallelism the GPU has to offer. It would also seem most realistic if the program would do better on small instances that would require less memory bandwitdh and operations.
+
+The implemented solution can be seen in file \todo{What file}.
 
 \subsection{Parallel Simplex on Single Instance}
-nested parallelism in map map
-Flattening on Matrix
+Given a single instance of a linear program, to compute the result in parallel a few obstacles has to be addressed. Since part of the input is a matrix and the matrix has to be updated potentially multiple times on all rows and columns a flat representation of the matrix has to be created. This allows us to spawn threads for each element in the matrix. 
+
+In the original $pivot$ function there was nested parallelism in the form of a map inside a map, but since the matrix was flattened the flattening of the map operator becomes trivial and simply a single map over the entire matrix's length.
 
 \subsection{Parallel Simplex on Multiple Instances}
 Nested parallelism on iotas, reduces, scans.
