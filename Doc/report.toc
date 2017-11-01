@@ -1,13 +1,14 @@
 \contentsline {section}{\numberline {1}Introduction}{2}{section.1}
 \contentsline {section}{\numberline {2}Preliminary}{2}{section.2}
-\contentsline {subsection}{\numberline {2.1}Simplex}{2}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Futhark}{2}{subsection.2.2}
-\contentsline {section}{\numberline {3}Implementation}{2}{section.3}
-\contentsline {subsection}{\numberline {3.1}Parallel on Multiple Instances}{2}{subsection.3.1}
-\contentsline {subsection}{\numberline {3.2}Parallel Simplex on Single Instance}{2}{subsection.3.2}
-\contentsline {subsection}{\numberline {3.3}Parallel Simplex on Multiple Instances}{2}{subsection.3.3}
-\contentsline {section}{\numberline {4}Benchmarks}{2}{section.4}
-\contentsline {subsection}{\numberline {4.1}One big instance}{2}{subsection.4.1}
-\contentsline {subsection}{\numberline {4.2}Many small instances}{2}{subsection.4.2}
-\contentsline {subsection}{\numberline {4.3}Many big instances}{2}{subsection.4.3}
-\contentsline {section}{\numberline {5}Conclusion}{2}{section.5}
+\contentsline {subsection}{\numberline {2.1}Linear Programming}{2}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Simplex}{2}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}Flattening}{3}{subsection.2.3}
+\contentsline {section}{\numberline {3}Implementation}{3}{section.3}
+\contentsline {subsection}{\numberline {3.1}Parallel on Multiple Instances}{3}{subsection.3.1}
+\contentsline {subsection}{\numberline {3.2}Parallel Simplex on Single Instance}{3}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}Parallel Simplex on Multiple Instances}{3}{subsection.3.3}
+\contentsline {section}{\numberline {4}Benchmarks}{3}{section.4}
+\contentsline {subsection}{\numberline {4.1}One big instance}{3}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Many small instances}{3}{subsection.4.2}
+\contentsline {subsection}{\numberline {4.3}Many big instances}{3}{subsection.4.3}
+\contentsline {section}{\numberline {5}Conclusion}{3}{section.5}

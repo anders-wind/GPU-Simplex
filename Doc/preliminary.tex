@@ -1,5 +1,21 @@
 % !TeX spellcheck=en_GB
 \section{Preliminary}
-\subsection{Simplex}
+\subsection{Linear Programming}
+A \textit{linear program}(LP) consists of a set of $n$ \textit{variables} and $m$ \textit{linear constraints}. The LP specifies an objective function which maximizes or minimizes a linear combination of the variables and their coefficients, subject to the m constraints. All variables and constraints must be linear and therefore it is not allowed to multiply variables with each other or itself. To formulate precisely:
 
-\subsection{Futhark}
+\begin{alignat}{3}
+\text{max: } &\sum_{i=1}^{n} c_i x_i\nonumber\\ 
+\text{s.t }  & \sum_{j=1}^{n} a_{ij} x_j \leq b_i && \text{ for } i=1,2,...,m\nonumber\\ 
+& x_j \geq 0                         && \text{ for } j=1,2,...,n\nonumber
+\end{alignat}
+
+The variables can be seen as dimensions in coordinate system and the constraints defines a convex feasibility region where the values of the variables satisfies all of the constraints. An extreme point of the region will have a specific objective value and it can be shown that the optimal value of the linear program can be found in such a point. 
+
+The result of running a linear program can either be a vector of the variables or a scalar representing the resulting value of the objective function depending on what is wanted. 
+
+By adding the constraint that the variables have to be integers the linear programming problem becomes NP-hard. This version is called Integer Linear Programming and can be used to solve other NP-hard problems quite efficiently.
+
+\subsection{Simplex}
+Simplex is a specific algorithm for finging the optimal value
+
+\subsection{Flattening}
