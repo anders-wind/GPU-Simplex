@@ -1,3 +1,5 @@
 % !TeX spellcheck=en_GB
 \section{Introduction}
 Linear programming is one of the most used theories in optimization and can be used to solve NP-hard problems when constraining the solutions to be integers. The first linear programming algorithm is the Simplex algorithm discovered by xxx in 195x. While the algorithm is exponential it is very fast in practise and is still used in most of the shelf algorithms. Multiple researchers and practitioners have made both CPU\todo{footnote to ref} and GPU\todo{footnote to ref} parallel versions of Simplex but none of them are to our knowledge \todo{check} used in practise.
+
+In this project we try to create three different massively parallel implementations of the simplex algorithm on multiple instances. The implementations are written in the data-parallel, purely functional language Futhark which can compile highly efficient GPU code. Furthermore we will benchmark and compare the different algorithms to see what speedup can be achieved when nested parallelism is removed.
