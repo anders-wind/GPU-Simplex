@@ -51,19 +51,30 @@ let pivot [n] [m] [mxn] (A : [mxn]f32) (b : [m]f32) (c : [n]f32) (v:f32) (l:i32)
   in (AHat, bHat, cHat, vHat)
 
 let entering_variable [n] (c : [n]f32) : i32 =
-  reduce
-    (\res j -> unsafe if res != -1 then res else if c[j] > 0f32 then j else -1)
-    (-1)
-    (iota n)
+  let (vals,_) =
+    reduce
+      (\(acc_index,acc_val) (index,vall) ->
+        if acc_index < 0
+        then
+          if vall > 0f32
+          then (index,vall)
+          else (-1,0f32)
+        else (acc_index,acc_val))
+    (-1,0f32)
+    (zip (iota n) c)
+  in vals
 
 let leaving_variable [m] [mxn] (A : [mxn]f32) (b : [m]f32) (e : i32) (n : i32) : i32 =
   let delta = map (\i -> unsafe if A[i*n+e] > 0f32 then b[i]/A[i*n+e] else inf) (iota m)
-  let all_inf = reduce (\acc b -> if b == inf then acc else 1f32) 0f32 delta
-  in if all_inf == 0f32 then -1 else
-     reduce
-       (\min l -> unsafe if min != -1 && delta[l] > delta[min] then min else l)
-       (-1)
-       (iota m)
+  let (vals,_) =
+    reduce
+      (\(acc_index,acc_val) (index,vall) ->
+        if acc_val == inf && vall == inf then (-1,inf)
+        else if acc_val == inf || vall < acc_val then (index,vall)
+        else (acc_index, acc_val))
+      (-1,inf)
+      (zip (iota m) delta)
+  in vals
 
 let swap [mpn] (p : *[mpn]i32) (e : i32) (l : i32) =
   let tmp = p[e] in let p[e] = p[l] in let p[l] = tmp in p
