@@ -34,7 +34,9 @@ public class InstanceGenerator {
         // initialize the coefficients of the constraints
         for (int i = 0; i < constraintNumber; i++) {
             for (int j = 0; j < variableNumber; j++) {
-                constraints[i][j] = random.nextInt(101);
+                // coefficients have to be non-zero, otherwise we are guaranteed to have
+                // an unbounded problem
+                constraints[i][j] = random.nextInt(100) + 1;
             }
         }
         return new SimplexInstance(constraints, initialConstants, initialCoefficients);
