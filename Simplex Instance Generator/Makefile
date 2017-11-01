@@ -18,7 +18,7 @@ $(TARGET)%.class: $(SRC)%.java
 	javac -cp $(SRC):$(CPLEX)lib/* $(SRC)Program.java -d $(TARGET)
 
 run: $(TARGET)*.class
-	java -Xmx4096m -cp $(TARGET):$(CPLEX)lib/* -Djava.library.path=$(CPLEX)bin/x86-64_linux/ \
+	@java -Xmx4096m -cp $(TARGET):$(CPLEX)lib/* -Djava.library.path=$(CPLEX)bin/x86-64_linux/ \
 		Program $(N) $(VLOW) $(VHIGH) $(CLOW) $(CHIGH)
 
 clean:
