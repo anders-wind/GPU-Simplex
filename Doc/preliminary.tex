@@ -11,11 +11,34 @@ A \textit{linear program}(LP) consists of a set of $n$ \textit{variables} and $m
 
 The variables can be seen as dimensions in coordinate system and the constraints defines a convex feasibility region where the values of the variables satisfies all of the constraints. An extreme point of the region will have a specific objective value and it can be shown that the optimal value of the linear program can be found in such a point. 
 
+\todo[inline]{insert figure of a 2d linear program with an optimal point}
+
 The result of running a linear program can either be a vector of the variables or a scalar representing the resulting value of the objective function depending on what is wanted. 
 
 By adding the constraint that the variables have to be integers the linear programming problem becomes NP-hard. This version is called Integer Linear Programming and can be used to solve other NP-hard problems quite efficiently.
 
-\subsection{Simplex}
-Simplex is a specific algorithm for finging the optimal value
+\subsubsection{Simplex}
+Simplex is a specific algorithm for solving linear programs. It finds the optimal solution by traversing the extreme points of the feasible region, continuously increasing the objective value. 
+simplex initiates by generating the \textit{slack formulation} of the LP. To convert LP into slack form first $m$ \textit{slack variables} are introduced as follows.
 
-\subsection{Flattening}
+\begin{alignat}{3}
+\text{max: } &\sum_{i=1}^{n} c_i x_i\\
+\text{s.t }  & \sum_{j=1}^{n} a_{ij} x_j + x_{n+i} = b_i  && \text{ for } i=1,2,...,m\\
+& x_j \geq 0                                    && \text{ for } j=1,2,...,n+m
+\end{alignat}
+
+Then the slack formulation is achieved by isolating the slack variables in the constraints and changing the maximization to an equality with an unknown constant $z$. In this formulation every variable in the $z$-row is called the \textit{non-basic} variables and the isolated variables in the constraints are called the \textit{basic} variables. The formulation is as follows:
+
+\begin{alignat}{4}
+z        &= && \sum_{i=1}^{n} c_ix_i\\
+x_{n+i}  &= && b_i - \sum_{j=1}^{n} a_{ij} x_j  &&& \text{ for } i=1,2,...,m
+\end{alignat}
+
+Given the slack form simplex iteratively pivots variables to increase the objective value. In a pivot a non-basic variable essentially swaps position with a basic variable. After the pivot $z$ must either increase stay the same. The variable chosen to leave the non-basic variable is based on picking only variables with positive coefficients. The variable chosen to leave the basic variables is based on which constraint is the most binding. When it is not possible to pivot any variables without decreasing $z$, that is every coefficient of the non-basic variables are negative, the optimal solution has been found. The solution to the original problem is the set of variables, where every non-basic variable is $0$ and the basic variables are equal to the corresponding constant.
+
+\todo[inline]{maybe write what a pivot is more precisely}
+
+There are a finite number of basic solutions to an LP. In a basic solution there are $m$ basic variables which can be picked from the $n + m$ variables in the slack formulation. There is ${{n+m}\choose{m}} = \frac{(n+m)!}{n!*m!}$ different ways these basic variables can be picked and each basic solution has an objective value. Therefore if simplex continuously explore new basic solutions it will either terminate when all coefficients of the objective function are negative corresponding to an optimal solution or when simplex detects that the LP is \textit{unbounded}.
+
+\subsubsection{Representation}
+One way to represent the constraints and variables is with vectors and matrices. Since we have a $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. 
