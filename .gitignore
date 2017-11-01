@@ -41,3 +41,5 @@
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+Simplex Instance Generator/out/
+Simplex Instance Generator/.idea/workspace.xml
