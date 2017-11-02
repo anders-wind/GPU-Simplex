@@ -28,7 +28,7 @@ public class InstanceGenerator {
 
         // initialize constants of the constraints
         for (int i = 0; i < constraintNumber; i++) {
-            initialConstants[i] = random.nextInt(101);
+            initialConstants[i] = random.nextInt(401)+100; // 100-1001
         }
 
         // initialize the coefficients of the constraints
