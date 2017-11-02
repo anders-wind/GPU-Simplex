@@ -44,3 +44,16 @@ Given the slack form simplex iteratively pivots variables to increase the object
 
 \subsubsection{Representation}
 One way to represent the constraints and variables is with vectors and matrices. Since we have a $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. The sequential simplex algorithm which functions as the basis for the implementations is based on a compact version of the algorithm presented in [Cormin chapter 21]\todo{proper ref}. The algorithm uses the matrix representation of the linear program.
+	
+\begin{table}[H]
+	\centering
+	\label{my-label}
+	\begin{tabular}{|l|l|l|l|l|}
+		\hline
+		& $x_1$                       & $x_2$                        & $x_3$                       &                            \\ \hline
+		& \cellcolor[HTML]{ECF4FF}10  & \cellcolor[HTML]{ECF4FF}-0.5 & \cellcolor[HTML]{ECF4FF}5.5 &                            \\ \hline
+		$x_4$ & \cellcolor[HTML]{FFCCC9}3   & \cellcolor[HTML]{FFCCC9}3    & \cellcolor[HTML]{FFCCC9}0   & \cellcolor[HTML]{9AFF99}10 \\ \hline
+		$x_5$ & \cellcolor[HTML]{FFCCC9}-10 & \cellcolor[HTML]{FFCCC9}0    & \cellcolor[HTML]{FFCCC9}-7  & \cellcolor[HTML]{9AFF99}17 \\ \hline
+	\end{tabular}
+	\caption{Matrix representation of a linear program with 3 variables and 2 constraints. The blue cells coresponds to the c vector. The red cells corresponds to the constraint matrix and the green cells correspond to the constants vector.}
+\end{table}
