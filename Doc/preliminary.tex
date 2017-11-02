@@ -1,10 +1,14 @@
 % !TeX spellcheck=en_GB
 \section{Preliminary}
 \subsection{Prior work}
-Due to the popularity and importance of linear programming optimization solvers, a lot of research has been done on efficient parallel implementations of simplex and similar algorithms. In [A parallel primal–dual simplex algorithm - 2000] by Diego Klabjan, Ellis L. Johnson, George L. Nemhauser, a multi-computer approach was introduced which solved independent parts of the simplex problem to decrease the number of iterations required to solve the instances. In [Efficient Implementation of the Simplex Method on a CPU-GPU System - 2011] by Mohamed Esseghir Lalami, Vincent Boyer, Didier El-Baz, a mix of efficient CPU and CUDA routines were used to obtain a 12.5 times speedup of the Simplex algorithm when compared to a purely CPU based.In [Efficient GPU-based implementations of Simplex type algorithms - 2015] by Nikolaos Ploskas and Nikolaos Samaras, an implementation of GPU based algorithms of the Revised Simplex and Primal Dual Point and gained speedup increases for up to $181$ compared to a sequential MATLAB implementation.
+Due to the popularity and importance of linear programming solvers, a lot of research has been done on efficient parallel implementations of Simplex and similar algorithms. In [A Parallel Primal–Dual Simplex Algorithm - 2000] by Diego Klabjan, Ellis L. Johnson, George L. Nemhauser, a multi-computer approach was introduced which solved independent parts of Simplex to decrease the number of iterations required to solve the instances.
+
+In [Efficient Implementation of the Simplex Method on a CPU-GPU System - 2011] by Mohamed Esseghir Lalami, Vincent Boyer, Didier El-Baz, a mix of efficient CPU and CUDA routines were used to obtain a 12.5 times speedup of the Simplex algorithm when compared to a purely CPU-based one.
+
+In [Efficient GPU-based implementations of Simplex type algorithms - 2015] by Nikolaos Ploskas and Nikolaos Samaras, GPU-based implementations of the Revised Simplex and Primal Dual Point algorithms showed speedup increases with a factor of up to $181$ compared to a sequential MATLAB implementation.
 
 \subsection{Linear Programming}
-A \textit{linear program}(LP) consists of a set of $n$ \textit{variables} and $m$ \textit{linear constraints}. The LP specifies an objective function which maximizes or minimizes a linear combination of the variables and their coefficients, subject to the $m$ constraints. All variables and constraints must be linear and therefore it is not allowed to multiply variables with each other or itself. To formulate precisely:
+A \textit{linear program} (LP) consists of a set of $n$ \textit{variables} and $m$ \textit{linear constraints}. The LP specifies an objective function which maximizes or minimizes a linear combination of the variables and their coefficients, subject to the $m$ constraints. All variables and constraints must be linear. To formulate precisely:
 
 \begin{alignat*}{3}
 \text{max: } &\sum_{i=1}^{n} c_i x_i\\
@@ -12,21 +16,21 @@ A \textit{linear program}(LP) consists of a set of $n$ \textit{variables} and $m
 & x_j \geq 0                         && \text{ for } j=1,2,...,n
 \end{alignat*}
 
-The variables can be seen as dimensions in a $n$-dimensional coordinate system and the constraints defines a convex feasibility region where the values of the variables satisfies all of the constraints. An extreme point of the region will have a specific objective value and it can be shown that the optimal value of the linear program can be found in such a point.
+The variables can be seen as dimensions in a $n$-dimensional coordinate system and the constraints define a convex feasibility region where the values of the variables satisfy all of the constraints. An extreme point of the region will have a specific objective value and it can be shown that the optimal value of the linear program can be found in such a point.
 
 \begin{figure}[H]
 	\centering
 	\label{key}
 	\includegraphics[width=0.6\textwidth]{Linear_Programming_Feasible_Region}
-	\caption{The graphical interpretation of a linear program with two variables and three constraints. Source \url{https://en.wikipedia.org/wiki/Feasible_region}}
+	\caption{The graphical interpretation of a linear program with two variables and three constraints. Source: \url{https://en.wikipedia.org/wiki/Feasible_region}}
 	\graphicspath{dir-list}
 \end{figure}
 
-The result of running a linear program can either be a vector of the variables of the optimal solution or a scalar representing the resulting value of the objective function depending on what is wanted. Since there can be multiple optimal points the variable vector might be difficult to compare with an expected vector therefore the objective value is often used instead. By adding the constraint that the variables have to be integers the linear programming problem becomes NP-hard. This version is called \textit{Integer Linear Programming} (ILP) and can be used to solve other NP-hard problems quite efficiently. This project does not work dive into ILPs but still have relevance since simplex is also used to solve ILPs by relaxation.
+There can be multiple optimal solutions to a linear program, so to validate the correctness of the result, typically only the value of the objective function is used\todo{maybe reformulate}.
 
-\subsubsection{Simplex}
+\subsubsection{The Simplex Algorithm}
 Simplex is a specific algorithm for solving linear programs. It finds the optimal solution by traversing the extreme points of the feasible region, continuously increasing the objective value.
-Simplex initiates by generating the \textit{slack formulation} of the LP. To convert LP into slack form first $m$ \textit{slack variables} are introduced as follows.
+Simplex initiates by generating the \textit{slack formulation} of the LP. To convert LP into slack form first, $m$ \textit{slack variables} are introduced as follows:
 
 \begin{alignat*}{3}
 \text{max: } &\sum_{i=1}^{n} c_i x_i\\
@@ -34,18 +38,20 @@ Simplex initiates by generating the \textit{slack formulation} of the LP. To con
 & x_j \geq 0                                    && \text{ for } j=1,2,...,n+m
 \end{alignat*}
 
-Then the slack formulation is achieved by isolating the slack variables in the constraints and changing the maximization to an equality with an unknown constant $z$. In this formulation every variable in the $z$-row is called the \textit{non-basic} variables and the isolated variables in the constraints are called the \textit{basic} variables. Every non-basic variable always has value 0, and every non-basic variable is therefore equal to the constant of the corresponding constraint. The formulation is as follows:
+\todo{anders reduces this}
+Then the slack formulation is achieved by isolating the slack variables in the constraints and changing the maximization to an equality with an unknown constant $z$. In this formulation every variable in the $z$-row is called the \textit{non-basic} variables and the isolated variables in the constraints are called the \textit{basic} variables. Every non-basic variable always has value 0, and every basic variable is therefore equal to the constant of the corresponding constraint. The formulation is as follows:
 
 \begin{alignat*}{4}
 z        &= && \sum_{i=1}^{n} c_ix_i\\
 x_{n+i}  &= && b_i - \sum_{j=1}^{n} a_{ij} x_j  &&& \text{ for } i=1,2,...,m
 \end{alignat*}
 
-Given the slack form simplex iteratively pivots variables to increase the objective value. In a pivot a non-basic variable essentially swaps position with a basic variable such that the value of the previously non-basic variable increases until the constraint is tight and the previously basic variable becomes $0$. After the pivot $z$ must either increase stay the same. The variable chosen to leave the non-basic variable is based on picking only variables with positive coefficients. The variable chosen to leave the basic variables is based on which constraint is the most binding, that is the constraint which allows the non-basic variable to increase the least. When it is not possible to pivot any variables without decreasing $z$, that is every coefficient of the non-basic variables are negative, the optimal solution has been found. The solution to the original problem is the set of variables, where every non-basic variable is $0$ and the basic variables are equal to the corresponding constant.
+Given the slack form, Simplex iteratively pivots variables to increase the objective value. In a pivot, a non-basic variable called the \textit{entering variable} essentially swaps position with a basic variable called the \textit{leaving variable}. The entering variable is a non-basic variable with a positive objective coefficient, and the leaving variable is based on which constraint is the most binding.
 
+After the pivot, the objective value must either increase or stay the same. When it is not possible to pivot any variables without decreasing the objective value, the optimal solution has been found.
 
 \subsubsection{Representation}
-One way to represent the constraints and variables is with vectors and matrices. Since we have $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. The sequential simplex algorithm is the basis for the implementations of this project is based on a compact version of the algorithm presented in "Introduction to Algorithms"\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al.
+One way to represent the constraints and variables is with vectors and matrices. Since we have $n$ variables, the coefficients of the variables can be encoded in a vector $c$ of length $n$. There are $m$ constants of the constraints which can be encoded into a vector $b$ of length $m$. The constraints can be seen as an $m \times n$-matrix $A$ over every variable and constraint. The sequential Simplex algorithm is based on a version of the algorithm presented in [Introduction to Algorithms]\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al.
 	
 \begin{table}[H]
 	\centering
@@ -57,5 +63,5 @@ One way to represent the constraints and variables is with vectors and matrices.
 		$x_4$ & \cellcolor[HTML]{FFCCC9}3   & \cellcolor[HTML]{FFCCC9}3    & \cellcolor[HTML]{FFCCC9}0   & \cellcolor[HTML]{9AFF99}10 \\ \hline
 		$x_5$ & \cellcolor[HTML]{FFCCC9}-10 & \cellcolor[HTML]{FFCCC9}0    & \cellcolor[HTML]{FFCCC9}-7  & \cellcolor[HTML]{9AFF99}17 \\ \hline
 	\end{tabular}
-	\caption{Matrix representation of a linear program with three variables and two constraints. The red cells correspond to the constraint matrix,  the blue to the c vector, and the green to the constants vector.}
+	\caption{Matrix representation of a linear program with three variables and two constraints. The red cells correspond to the matrix $A$, the green to vector $b$, and the blue to vector $c$.}
 \end{table}
