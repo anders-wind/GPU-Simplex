@@ -1,8 +1,11 @@
 % !TeX spellcheck=en_GB
 \section{Design}
+\todo{we should have short intros for all sections}
 
 \subsection{Scope for parallelism in Simplex}
-There is a convergence loop, but everything in pivot can be done in parallel, bla.
+The bulk of the work in the Simplex algorithm happens in the convergence loop containing the pivot procedure. By its nature, the convergence loop is unparallelisable since every iteration depends on the previous iteration. However, pivot itself is highly parallel as the values in the new $A'$ matrix and $b'$ and $c'$ \todo{make sure this notation is consistent with the theory in the preliminary section} vectors are computed independently of each other by only using values from the previous $A$, $b$, and $c$ (except $c'$, which also depends on $A'$).
+
+Nevertheless, the execution time under a parallel pivot will still be dominated by the number of iterations in the convergence loop, which is worst-case exponential in the size of the problem, limiting the potential gain from parallelisation.
 
 \subsection{Approach}
 Our approach. Something about multiple instances. Three versions. Notes for the versions: thoughts on the amount of scans, transposition for memory coalescing, hoisting shared stuff outside of the loop, the significance of entering and leaving variable.
