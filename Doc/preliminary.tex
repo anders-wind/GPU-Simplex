@@ -15,10 +15,9 @@ The variables can be seen as dimensions in a $n$-dimensional coordinate system a
 	\centering
 	\label{key}
 	\includegraphics[width=0.6\textwidth]{Linear_Programming_Feasible_Region}
-	\caption{My caption}
+	\caption{The graphical interpretation of a linear program with two variables and three constraints. Source \url{https://en.wikipedia.org/wiki/Feasible_region}}
 	\graphicspath{dir-list}
 \end{figure}
-\todo[inline]{Taget fra wiki så lav vores egen}
 
 The result of running a linear program can either be a vector of the variables of the optimal solution or a scalar representing the resulting value of the objective function depending on what is wanted. Since there can be multiple optimal points the variable vector might be difficult to compare with an expected vector therefore the objective value is often used instead. By adding the constraint that the variables have to be integers the linear programming problem becomes NP-hard. This version is called \textit{Integer Linear Programming} (ILP) and can be used to solve other NP-hard problems quite efficiently. This project does not work dive into ILPs but still have relevance since simplex is also used to solve ILPs by relaxation.
 
@@ -55,5 +54,5 @@ One way to represent the constraints and variables is with vectors and matrices.
 		$x_4$ & \cellcolor[HTML]{FFCCC9}3   & \cellcolor[HTML]{FFCCC9}3    & \cellcolor[HTML]{FFCCC9}0   & \cellcolor[HTML]{9AFF99}10 \\ \hline
 		$x_5$ & \cellcolor[HTML]{FFCCC9}-10 & \cellcolor[HTML]{FFCCC9}0    & \cellcolor[HTML]{FFCCC9}-7  & \cellcolor[HTML]{9AFF99}17 \\ \hline
 	\end{tabular}
-	\caption{Matrix representation of a linear program with 3 variables and 2 constraints. The red cells correspond to the constraint matrix,  the blue cells correspond to the c vector, and the green cells correspond to the constants vector.}
+	\caption{Matrix representation of a linear program with three variables and two constraints. The red cells correspond to the constraint matrix,  the blue to the c vector, and the green to the constants vector.}
 \end{table}
