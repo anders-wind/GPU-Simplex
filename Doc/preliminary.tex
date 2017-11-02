@@ -24,7 +24,7 @@ The result of running a linear program can either be a vector of the variables o
 
 \subsubsection{Simplex}
 Simplex is a specific algorithm for solving linear programs. It finds the optimal solution by traversing the extreme points of the feasible region, continuously increasing the objective value.
-simplex initiates by generating the \textit{slack formulation} of the LP. To convert LP into slack form first $m$ \textit{slack variables} are introduced as follows.
+Simplex initiates by generating the \textit{slack formulation} of the LP. To convert LP into slack form first $m$ \textit{slack variables} are introduced as follows.
 
 \begin{alignat*}{3}
 \text{max: } &\sum_{i=1}^{n} c_i x_i\\
@@ -43,7 +43,7 @@ Given the slack form simplex iteratively pivots variables to increase the object
 
 
 \subsubsection{Representation}
-One way to represent the constraints and variables is with vectors and matrices. Since we have a $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. The sequential simplex algorithm is the basis for the implementations of this project is based on a compact version of the algorithm presented in "Introduction to Algorithms"\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al.
+One way to represent the constraints and variables is with vectors and matrices. Since we have $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. The sequential simplex algorithm is the basis for the implementations of this project is based on a compact version of the algorithm presented in "Introduction to Algorithms"\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al.
 	
 \begin{table}[H]
 	\centering

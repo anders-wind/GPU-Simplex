@@ -1,7 +1,7 @@
 % !TeX spellcheck=en_GB
 \section{Implementation}
 \subsection{Test Instance Generation}
-A simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. Each value is randomly generated as a float with value between 0 and 100. Afterwards the instance is solved by the off the shelf algorithm to ensure that the solution can be solved and to provide the expected output. 
+A simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. Each value is randomly generated as a float with value between 100 and 500. Afterwards the instance is solved by the off the shelf algorithm to ensure that the solution can be solved and to provide the expected output. 
 
 The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations.
 
