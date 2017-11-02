@@ -1,4 +1,5 @@
--- Implementation of Simplex: reduced, flat representation
+-- Implementation of Simplex on multiple instances.
+-- Parallel across multiple instances, parallel on single instance.
 --
 -- main As bs cs = lists of optimal objective values
 -- As are lists of the constraint coefficients (flattened m*n length)
@@ -6,11 +7,13 @@
 -- cs are lists of the objective coefficients (n length)
 --
 -- ==
--- nobench input @tests/multi_test_in.txt
--- output @tests/multi_test_out.txt
+-- tags { full_parallel }
 --
--- compiled input @tests/multi_gen_test_in.txt
--- output @tests/multi_gen_test_out.txt
+-- nobench input @tests/full_test_in.txt
+-- output @tests/full_test_out.txt
+--
+-- compiled input @tests/full_gen_test_in.txt
+-- output @tests/full_gen_test_out.txt
 
 default(i32)
 default(f32)

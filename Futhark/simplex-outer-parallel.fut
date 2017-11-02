@@ -1,4 +1,5 @@
--- Implementation of Simplex: reduced, nested representation
+-- Implementation of Simplex on multiple instances.
+-- Parallel across multiple instances, sequential on single instance.
 --
 -- Only works on regular arrays, i.e. all instances need to be same size
 -- main As bs cs = list of optimal objective values
@@ -7,11 +8,13 @@
 -- cs are lists of the objective coefficients (n length)
 --
 -- ==
--- nobench input @tests/test_in.txt
--- output @tests/test_out.txt
+-- tags { outer_parallel }
 --
--- compiled input @tests/gen_test_in.txt
--- output @tests/gen_test_out.txt
+-- nobench input @tests/outer_test_in.txt
+-- output @tests/outer_test_out.txt
+--
+-- compiled input @tests/outer_gen_test_in.txt
+-- output @tests/outer_gen_test_out.txt
 
 default(i32)
 default(f32)
