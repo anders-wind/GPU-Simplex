@@ -12,6 +12,23 @@ To get around the hard limit on parallelisation by the convergence loop, our app
 
 In order to explore the effects of parallelism, we implement three versions of the algorithm that exploit different degrees of parallelism: outer parallel across instances, inner parallel across Simplex, and fully parallel across instances and Simplex.
 
+We work from the following pseudocode version of Multi-Simplex:
+\begin{verbatim}
+Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]):
+  map
+    (\A b c ->
+      e = entering_variable c
+      while e != -1:
+        let l = leaving_variaable A b e
+        let (A,b,c,v) = pivot A b c v l e
+        let e = entering_variable c
+      return v
+    )
+    As bs cs
+\end{verbatim}
+
+Here \texttt{h} is the number of instances and an instance \texttt{i} is represented by the constraints matrix \texttt{As[i]}, constants vector \texttt{bs[i]}, and objective coefficients vector \texttt{cs[i]}.
+
 \subsubsection{Assumptions and limitations}
 We make a number of assumptions about the linear program instances in order to simplify the Simplex algorithm. In particular, we assume the instances:
 \begin{itemize}
@@ -24,18 +41,25 @@ We do \textit{not} assume that Simplex will not cycle, or that the multiple inst
 The selection of the entering and leaving variables determine how fast the loop converges, but there is no general rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have a useful property: it guarantees that Simplex does not enter a degenerate case and cycles, i.e. the algorithm will eventually terminate.
 
 \subsubsection{Outer Parallel Multi-Simplex}
-Given multiple instances of linear programs, each can be solved independently. This allows for a trivial parallelism where each solution is solved in parallel which corresponds to a map over the instances with the simplex solver as operator. Since only one dimension has to be computed in parallel it is not necessary to flatten the input. For this type of parallelism to be performant\todo{not a word} the number of instances must be near or exceed the number of threads the GPU has to offer - whereas a small number of instances would not utilize the level of parallelism the GPU has to offer. It would also seem most realistic if the program would do better on small instances that would require less memory bandwidth and operations for each thread.
+In this version, the multiple instances of linear programs are solved in parallel, but each individual instance is solved sequentially. This corresponds to a map over the instances with the Simplex solver as operator. Since only the outer dimension has to be computed in parallel, it is not necessary to flatten the input.
+
+For this type of parallelism to be performant, the number of instances must be near or exceed the number of threads the GPU has to offer, as a small number of instances would not properly exploit the parallelism.
 
 \subsubsection{Inner Parallel Multi-Simplex}
-Given a single instance of a linear program, to compute the result in parallel a few obstacles has to be addressed. Since part of the input is a matrix and the matrix has to be updated potentially multiple times on all rows and columns a flat representation of the matrix is created. In the original $pivot$ function there was nested parallelism in the form of a map inside a map, but since the matrix was flattened the nested map operator simply becomes a single map over the entire matrix's. This allows us to have full parallelism on the operations on the matrix. 
+In this version, the multiple instances are solved sequentially, but each individual instance is solved in parallel. In particular, this exploits the parallelism of the pivot procedure. The $A$ matrix is updated during pivot and introduces a small amount of nested parallelism. We therefore flatten the $A$ matrix and the nested map operator simply becomes a single map. This is the only change needed to facilitate full parallelism in pivot.
 
-One of the main obstructions of parallelism in simplex is the fact that pivots are required to happen sequentially since the result of each pivot is the input to the next, and furthermore the number of pivots required is unknown. This is a very limiting factor since there in worst case can be exponentially many pivots, meaning this is a dimension which in worst case could be the most dominant.
+This type of parallelism is potentially useful for very large instances with many constraints and variables whose coefficients in $A$, $b$, and $c$ need to be updated often. The main bottleneck will then likely be the number of iterations needed for convergence for each instance as well as the outer sequential loop across instances.
 
 \subsubsection{Fully Parallel Multi-Simplex}
-Given multiple instances of linear programs a lot of nested parallelism is introduced which significantly increases the complexity\todo{bad word. I mean how hard it is to write the code, not the O-notation complexity} of an algorithm is parallel in both dimension. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are requires to remove the nested parallelism. Furthermore since each instance can have different dimensions a lot of standard techniques cannot be used and indexing into arrays becomes a bit harder.
+In this version, the multiple instances are solved fully in parallel with Simplex rewritten to take in and solve several instances at once. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are required to remove the nested parallelism. Furthermore, since each instance can have different dimensions, we need a way to keep track of their position inside each flattened array of $A$, $b$, and $c$.
+
+\newpar
+Due to the flattening, the main algorithm now also needs a shape array for $n$ and $m$ to determine the number of variables $n$ and constraints $m$ for each instance. To access $A$, $b$, and $c$ with a map, we need indices ... to be continued.
 
 One of the key observations we made was the fact that a lot of the nested parallelism came from the same values. Iotas and other helper arrays were created over the same constant properties which only changed from instance to instance. Therefore most of these arrays can be computed once such that their expensive constant time overhead will be amortized over the iterations of pivots each instance goes through.
 
 The original entering variable and leaving variable methods consisted of a reduces\todo{maybe more} which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong results on the parallel. The problem originated from the fact that the neutral element can be places on both sides of the operator, which we had not taken into consideration and only handled it for the left side. This emphasizes the importance of testing and perhaps using modules for ensuring that operators are indeed parallel.
 
 Like the parallel simplex on a single instance it is not possible to run the pivots in parallel. This has all the same implications but with the added problem that the number of pivots the threads execute now always corresponds to the one instance with the most pivots. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This problem is mitigated if the level of parallelism does not exceed the thread capacity of the hardware and therefore only becomes a problem on many very large instances.
+
+Notes for the versions: thoughts on the amount of scans, transposition for memory coalescing, hoisting shared stuff outside of the loop, the significance of entering and leaving variable.
