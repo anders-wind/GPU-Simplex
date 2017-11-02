@@ -43,7 +43,7 @@ Given the slack form simplex iteratively pivots variables to increase the object
 
 
 \subsubsection{Representation}
-One way to represent the constraints and variables is with vectors and matrices. Since we have a $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. The sequential simplex algorithm which functions as the basis for the implementations is based on a compact version of the algorithm presented in [Cormin chapter 21]\todo{proper ref}. The algorithm uses the matrix representation of the linear program.
+One way to represent the constraints and variables is with vectors and matrices. Since we have a $n$ variables the coefficients of the variables can be encoded in a vector $c$, there are $m$ constants of the constraints which can be encoded into a vector $b$ and the constraints can be seen as a matrix $A$ over every variable and constraint row. The sequential simplex algorithm is the basis for the implementations of this project is based on a compact version of the algorithm presented in "Introduction to Algorithms"\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al.
 	
 \begin{table}[H]
 	\centering
