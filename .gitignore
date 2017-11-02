@@ -8,8 +8,13 @@
 # Test files
 *actual*
 *expected*
-*gen_test_in.txt
-*gen_test_out.txt
+Futhark/generated_tests/
+
+# Too big for github, have to compress
+Futhark/tests/many_big_instances_1000_200_200.test
+Futhark/tests/many_small_instances_5000_10_10.test
+Futhark/tests/many_varying_instances_1000_150_150.test
+Futhark/tests/one_big_instance_1_3000_3000.test
 
 ## Generated report
 *.pdf
