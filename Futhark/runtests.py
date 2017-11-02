@@ -11,10 +11,10 @@ import subprocess
 # Hardcoded stuff
 # ---------------------------------------------------------------------------- #
 
-test_dir = 'tests/'
-test_in = 'gen_test_in.txt'
-test_out = 'gen_test_out.txt'
-tmp_prefix = 'tmpfutsimplex'
+test_dir = 'generated_tests/'
+test_in = 'test_in.txt'
+test_out = 'test_out.txt'
+basic_test= 'tests/basic_4_3_3.test'
 
 class FutharkFormat:
     '''Different futhark syntax test formats. (enum hack)
@@ -174,50 +174,66 @@ class FutharkTestConverter(object):
         self.params = self.reader.read_params()
         self.padding = [(max_v - v, max_c - c) for (v,c) in self.params]
 
-    def convert_outer_parallel(self, iw, ow):
-        iw.write_matrices(pad_constraints(self.reader.read_a_constraints(), self.padding))
-        iw.write_arrays(pad_constants(self.reader.read_b_constants(), self.padding))
-        iw.write_arrays(pad_coefficients(self.reader.read_c_coefficients(), self.padding))
-        ow.write_floats(self.reader.read_results())
+    def convert_a_constraints(self, outputs):
+        a_constraints = self.reader.read_a_constraints()
+        padded_a = pad_constraints(a_constraints, self.padding)
+        for (mode,iw,_) in outputs:
+            if mode == FutharkFormat.OuterParallel:
+                iw.write_matrices(padded_a)
+            elif mode == FutharkFormat.InnerParallel:
+                iw.write_arrays(flatten_2dim_inner(padded_a))
+            elif mode == FutharkFormat.FullParallel:
+                iw.write_floats(flatten_2dim(a_constraints))
 
-    def convert_inner_parallel(self, iw, ow):
-        padded_a = pad_constraints(self.reader.read_a_constraints(), self.padding)
-        iw.write_arrays(flatten_2dim_inner(padded_a))
-        iw.write_arrays(pad_constants(self.reader.read_b_constants(), self.padding))
-        iw.write_arrays(pad_coefficients(self.reader.read_c_coefficients(), self.padding))
-        ow.write_floats(self.reader.read_results())
+    def convert_b_constants(self, outputs):
+        b_constants = self.reader.read_b_constants()
+        padded_b = pad_constants(b_constants, self.padding)
+        for (mode,iw,_) in outputs:
+            if mode == FutharkFormat.OuterParallel:
+                iw.write_arrays(padded_b)
+            elif mode == FutharkFormat.InnerParallel:
+                iw.write_arrays(padded_b)
+            elif mode == FutharkFormat.FullParallel:
+                iw.write_floats(flatten_1dim(b_constants))
 
-    def convert_full_parallel(self, iw, ow):
-        iw.write_floats(flatten_2dim(self.reader.read_a_constraints()))
-        iw.write_floats(flatten_1dim(self.reader.read_b_constants()))
-        iw.write_floats(flatten_1dim(self.reader.read_c_coefficients()))
-        (vs,cs) = zip(*self.params)
-        iw.write_elements(cs)
-        iw.write_elements(vs)
-        ow.write_floats(self.reader.read_results())
+    def convert_c_coefficients(self, outputs):
+        c_coefficients = self.reader.read_c_coefficients()
+        padded_c = pad_coefficients(c_coefficients, self.padding)
+        for (mode,iw,_) in outputs:
+            if mode == FutharkFormat.OuterParallel:
+                iw.write_arrays(padded_c)
+            elif mode == FutharkFormat.InnerParallel:
+                iw.write_arrays(padded_c)
+            elif mode == FutharkFormat.FullParallel:
+                iw.write_floats(flatten_1dim(c_coefficients))
+                (vs,cs) = zip(*self.params)
+                iw.write_elements(cs)
+                iw.write_elements(vs)
 
-    def convert(self, mode):
-        prefix = FutharkFormat.get_prefix(mode)
-        tin = os.path.join(self.output_dir, prefix + self.output_in_file)
-        tout = os.path.join(self.output_dir, prefix + self.output_out_file)
-        iw, ow = FutharkTestWriter(tin), FutharkTestWriter(tout)
-        if mode == FutharkFormat.OuterParallel:
-            self.convert_outer_parallel(iw, ow)
-        elif mode == FutharkFormat.InnerParallel:
-            self.convert_inner_parallel(iw, ow)
-        elif mode == FutharkFormat.FullParallel:
-            self.convert_full_parallel(iw, ow)
+    def convert_results(self, outputs):
+        results = self.reader.read_results()
+        for (_,_,ow) in outputs:
+            # right now all versions have the same output format
+            ow.write_floats(results)
+
+    def convert(self, modes):
+        outputs = []
+        for mode in modes:
+            prefix = FutharkFormat.get_prefix(mode)
+            tin = os.path.join(self.output_dir, prefix + self.output_in_file)
+            tout = os.path.join(self.output_dir, prefix + self.output_out_file)
+            iw, ow = FutharkTestWriter(tin), FutharkTestWriter(tout)
+            outputs.append((mode, iw, ow))
+
+        self.convert_a_constraints(outputs)
+        self.convert_b_constants(outputs)
+        self.convert_c_coefficients(outputs)
+        self.convert_results(outputs)
+
 
 # ---------------------------------------------------------------------------- #
 # External commands
 # ---------------------------------------------------------------------------- #
-
-def generate_test_data(filename,n,(vl,vh),(cl,ch)):
-    '''Call Simplex Instance Generator to output data in Python syntax.'''
-    strc = 'make -C ../Simplex\ Instance\ Generator -s run\
-            N={0} VLOW={1} VHIGH={2} CLOW={3} CHIGH={4} > {5}'
-    cmd = strc.format(n,vl,vh,cl,ch,filename)
-    subprocess.call(cmd, shell=True)
 
 def run_futhark(files, compiler='futhark-c', mode='test'):
     '''Test/benchmark a futhark program on list of files.
@@ -231,79 +247,84 @@ def run_futhark(files, compiler='futhark-c', mode='test'):
         else:
             print("File doesn't exist: {0}".format(f))
 
-def cleanup():
-    cmd = 'rm -f {0}*'.format(tmp_prefix)
-    subprocess.call(cmd, shell=True)
-
 # ---------------------------------------------------------------------------- #
 # Entry Point
 # ---------------------------------------------------------------------------- #
 
 def doit(args):
     '''Main test runner. args are parsed command-line parameters.'''
-    try:
-        n,v,c = args.number, args.variables, args.constants
-        if not(args.no_gen or args.convert):
-            print('Generating test data: N={0}, V={1}, C={2}'.format(n,v,c))
-            test_file = os.path.join(test_dir, 'cplex_'+test_in) #tmp_prefix+'test.file'
-            generate_test_data(test_file,n,v,c)
+    if not(args.no_convert):
+        convert_file, n, max_v, max_c = args.convert
+        try:
+            _, max_v, max_c = int(n), int(max_v), int(max_c)
+        except ValueError:
+            print('2nd, 3rd, and 4th argument to --convert option must be integers.')
+            # n not currently used, but might be useful for validation
 
-        if args.convert:
-            test_file = args.convert
-            args.no_test_bench = True
-
-        if not(args.no_gen):
-            print('Converting Simplex Instance Generator data to Futhark test data')
-            converter = FutharkTestConverter(test_file, test_dir, test_in, test_out, v[1], c[1])
-            for mode in FutharkFormat.All:
-                converter.convert(mode)
-
-        compiler = args.compiler
-        if args.no_test_bench:
+        print('Converting data from {0} to Futhark test data'.format(convert_file))
+        try:
+            os.mkdir(test_dir)
+        except OSError:
             pass
-        elif args.test_all:
-            print('Testing all files')
-            run_futhark(glob('./*.fut'), compiler, mode='test')
-        elif args.test:
-            print('Testing one file: ' + args.test)
-            run_futhark([args.test], compiler, mode='test')
-        elif args.bench_all:
-            print('Benchmarking all files')
-            run_futhark(glob('./*.fut'), compiler, mode='bench')
-        elif args.bench:
-            print('Benchmarking one file: ' + args.bench)
-            run_futhark([args.bench], compiler, mode='bench')
-        else:
-            print('Default: Testing all files')
-            run_futhark(glob('./*.fut'), compiler, mode='test')
-    finally:
-        cleanup()
+        converter = FutharkTestConverter(convert_file, test_dir, test_in, test_out, max_v, max_c)
+        converter.convert(FutharkFormat.All)
 
-def int_tuple(string):
-    '''Parse an integer tuple from a string of the format "int1,int2". '''
-    spl = string.split(",")
-    if len(spl) != 2:
-        raise argparse.ArgumentTypeError("arg {0} should be a range a,b".format(string))
+    compiler = args.compiler
+    if args.no_test_bench:
+        pass
+    elif args.test_all:
+        print('Testing all files')
+        run_futhark(glob('./*.fut'), compiler, mode='test')
+    elif args.test:
+        print('Testing one file: ' + args.test)
+        run_futhark([args.test], compiler, mode='test')
+    elif args.bench_all:
+        print('Benchmarking all files')
+        run_futhark(glob('./*.fut'), compiler, mode='bench')
+    elif args.bench:
+        print('Benchmarking one file: ' + args.bench)
+        run_futhark([args.bench], compiler, mode='bench')
+    else:
+        print('Default: Testing all files')
+        run_futhark(glob('./*.fut'), compiler, mode='test')
+
+def test_file(string):
+    '''Parse test file parameters from the test's name "name_n_v_c.test",
+       where n is the number of instances in the test
+       v is the max number of variables (n)
+       c is the max number of constants (m)
+    '''
+    fname = string.strip('.test')
+    params = fname.split('_')
+    if len(params) < 4:
+        raise argparse.ArgumentTypeError("arg {0} should be a file name of format 'name_n_v_c.test'".format(string))
     try:
-        return int(spl[0]),int(spl[1])
+        params = params[-3:]
+        return (string, int(params[0]), int(params[1]), int(params[2]))
     except TypeError:
-        raise argparse.ArgumentTypeError("range {0} must be integers".format(string))
+        raise argparse.ArgumentTypeError("In 'name_n_v_c.test', n, v, and c must be integers".format(string))
+
 
 def main():
-    parser = argparse.ArgumentParser(description='Test the Futhark Simplex suite.')
+    parser = argparse.ArgumentParser(description='Test the Futhark Simplex suite. Converts test data from Simplex Instance Generation format to futhark syntax and puts the generaed tests in {0} directory. By default uses basic.test from tests directory.')
     parser.add_argument('-a','--test-all', help='Test all versions',action='store_true')
-    parser.add_argument('-t','--test', help='Test one file')
+    parser.add_argument('-t','--test', help='Test one simplex version. The argument is the path to the simplex futhark file.',type=str)
     parser.add_argument('-e','--bench-all', help='Benchmark all versions',action='store_true')
-    parser.add_argument('-b','--bench', help='Benchmark one file')
-    parser.add_argument('-n','--number', help='Number of instances to generate.', type=int, default=5)
-    parser.add_argument('-v','--variables', help='Range of variable numbers (n)', type=int_tuple, default=(1,5))
-    parser.add_argument('-c','--constants', help='Range of constant numbers (m)', type=int_tuple, default=(1,5))
-    parser.add_argument('-x','--no-test-bench', help='Only generate test data', action='store_true')
-    parser.add_argument('-y','--no-gen', help='Do not generate test data', action='store_true')
+    parser.add_argument('-b','--bench', help='Benchmark one simplex version. The argument is the path to the simplex futhark file.', type=str)
     parser.add_argument('-p','--compiler', help='Which Futhark compiler to use', default='futhark-c')
-    parser.add_argument('--convert', help='Given a file with Simplex Instance Generator output, convert to futhark simplex format')
-    # TODO: maybe data gen mode: sparse, etc.
-    #       --directory: run tests from directory
+
+    parser.add_argument('-c','--convert',
+        help='Convert test data from output of Simplex Instance Generator ' +
+        '(SIG). Argument is the filename which should follow the format ' +
+        '(path optional): "path/name_n_v_c.test". ' +
+        'This file should contain the output of SIG. ' +
+        '<n> is the number of instances, <v> is the max number of ' +
+        'variables (n), and <c> is the max number of constants (m). ' +
+        'Results are put in tests directory with _gen_ names.',
+        default=('tests/basic_4_3_3.test',4,3,3),
+        type=test_file)
+    parser.add_argument('-x','--no-test-bench', help='Do not run any tests or benches (for use with --convert).', action='store_true')
+    parser.add_argument('-n','--no-convert', help='Do not convert any tests, use ones already generated.', action='store_true')
     args = parser.parse_args()
     doit(args)
 
