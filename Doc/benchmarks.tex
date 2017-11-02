@@ -25,7 +25,7 @@ We have chosen to benchmark on four categories of tests which represents instanc
 \end{table}
 \todo[inline]{graphs}
 
-As seen table \ref{table:one-big-instance} the reduced-flat is the fastest implementation across all sizes. This is expected since it is is fully parallel on each instance while not having as much overhead as the reduced-flat-multi. Slowest of the GPU-parallel versions is the reduced which on a single instance is sequential which is also why we see faster running times of the CPU versions that this one, hence it is only running at the clock speed of the GPU which is significantly slower than the CPU. We also see that while the CPLEX is multi threaded the Futhark C-code is competitive even on the CPU. 
+As seen table \ref{table:one-big-instance} the reduced-flat is the fastest implementation across all sizes. This is expected since it is fully parallel on each instance while not having as much overhead as the reduced-flat-multi. Slowest of the GPU-parallel versions is the reduced which on a single instance is sequential which is also why we see faster running times of the CPU versions that this one, hence it is only running at the clock speed of the GPU which is significantly slower than the CPU. We also see that while the CPLEX is multi threaded the Futhark C-code is competitive.
 
 \subsection{Many small instances}
 \begin{table}[H]
@@ -44,7 +44,7 @@ As seen table \ref{table:one-big-instance} the reduced-flat is the fastest imple
 
 \todo[inline]{graphs}
 
-As seen on table \ref{table:many_small_instances} the reduced version is the fastest. This is expected since it is parallel on the outer dimension which is the largest dimension in these test cases. Since each instance only require relatively little work the reduced-flat does relatively bad. It waits for each instanc eto complete before the next starts which also implies that it will move the transfer the data over to the GPU in multiple stages, increasing the overhead of the algorithm. The reduced-flat-multi does fairly well since it also parallelize on the outer dimension but it is clear that the overhead for flattening the nested parallelism makes it slower than the reduced version. Furthermore it is clear that for a large number of instances the GPU clearly does better than the both of the CPU versions.
+As seen on table \ref{table:many_small_instances} the reduced version is the fastest. This is expected since it is parallel on the outer dimension which is the dominant dimension in these test cases. Since each instance only require relatively little work the reduced-flat does relatively bad. It waits for each instance to complete before the next starts which also implies that it will transfer the data over to the GPU in multiple stages, increasing the overhead of the algorithm. The reduced-flat-multi does fairly well since it is also parallel in the outer dimension but it is clear that the overhead for flattening the nested parallelism makes it slower than the reduced version. Furthermore it is clear that for a large number of instances the GPU clearly does better than the both of the CPU versions.
 
 
 \subsection{Many big instances}
@@ -64,7 +64,7 @@ As seen on table \ref{table:many_small_instances} the reduced version is the fas
 
 \todo[inline]{graphs}
 
-As seen in table \ref{table:many_big_instances} the reduced-flat-multi implementation is the fastest. This was expected since it is the implementation with the highest level of parallelism on both on the individual instances and the across instances. Since both dimensions are large it effectively utilizes the number of threads to its full potential and the overhead of generating helper arrays becomes negligible. The reduced and reduced-flat does competitively well since both of the dimensions are big and they can utilize the parallelism which also explains wy both of these run faster than the CPU versions.
+As seen in table \ref{table:many_big_instances} the reduced-flat-multi implementation is the fastest. This was expected since it is the implementation with the highest level of parallelism on both dimensions. Since both dimensions are large it effectively utilizes the number of threads to its the fullest and the overhead of generating helper arrays becomes negligible. The reduced and reduced-flat does competitively well since both of the dimensions are big and they can utilize the parallelism which also explains wy both of these run faster than the CPU versions.
 
 \subsection{Many instances of varying size}
 \begin{table}[H]
@@ -83,4 +83,4 @@ As seen in table \ref{table:many_big_instances} the reduced-flat-multi implement
 
 \todo[inline]{graphs}
 
-As seen in table \ref{table:many_varying_instances} in this case the reduced-flat-multi shows its strength. The implementation is ambiguous on the varying sizes and utilizes this to the fullest. The weakness of parallelism on only one dimension shows since these will be slower when the opposite dimension is large and therefore take up time on the GPU where other threads will wait. But while reduced and reduced-flat is a factor x slower than the reduced-flat-multi they still achieve a factor x speed-up from the CPU versions.
+As seen in table \ref{table:many_varying_instances} the reduced-flat-multi implementation shows its strength. The implementation is ambiguous on the varying sizes and utilizes this to the fullest. The weakness of the implementations which are parallel on only one dimension, is revealed when the opposite dimension is large and therefore take up time on the GPU where other threads will wait. But while reduced and reduced-flat is a factor x\todo{x} slower than the reduced-flat-multi they still achieve a factor x\todo{x} speed-up from the CPU versions.
