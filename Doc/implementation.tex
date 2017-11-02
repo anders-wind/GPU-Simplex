@@ -3,22 +3,24 @@
 \subsection{Test Instance Generation}
 A simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. Each value is randomly generated as a float with value between 0 and 100. Afterwards the instance is solved by the off the shelf algorithm to ensure that the solution can be solved and to provide the expected output. 
 
-The instance generator can be used to generate multiple instances of multiple sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations.
+The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations.
 
-\todo[inline]{maybe something on flattening input}
+To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format.
 
 \subsection{Sequential Simplex}
-\todo{The simplex algorithm is implemented by finding the entering and leaving variable. While it is possible to find such a pair a...}
+The sequential simplex algorithm which functions as the basis for the rest of the implementations is based on a compact version of the algorithm presented in [Cormin chapter 21]. The algorithm uses the matrix representation of the linear program and is fairly simple.  
 
 \subsection{Parallel on Multiple Instances}
 Given multiple instances of linear programs, each can be solved independently. This allows for a trivial parallism where each solution is solved in parallel which corresponds to a map over the instances with the simplex solver as operator. Since only one dimension is to be computed in parallel it is not necessary to flatten the input. For this type of parallelism to be performant the number of instances must be near or exceed the number of threads the GPU has to offer - whereas a small number of instances would not utilize the level of parallelism the GPU has to offer. It would also seem most realistic if the program would do better on small instances that would require less memory bandwitdh and operations.
 
-The implemented solution can be seen in file \todo{What file}.
+The implemented solution can be seen in file \texttt{simplex-reduced.fut} \todo{rename}.
 
 \subsection{Parallel Simplex on Single Instance}
 Given a single instance of a linear program, to compute the result in parallel a few obstacles has to be addressed. Since part of the input is a matrix and the matrix has to be updated potentially multiple times on all rows and columns a flat representation of the matrix has to be created. This allows us to spawn threads for each element in the matrix. 
 
 In the original $pivot$ function there was nested parallelism in the form of a map inside a map, but since the matrix was flattened the nested map operator simply becomes a single map over the entire matrix's. 
+
+The implemented solution can be seen in file \texttt{simplex-reduced-flat.fut} \todo{rename}.
 
 \subsection{Parallel Simplex on Multiple Instances}
 Given multiple instances of linear programs a lot of nested parallelism is introduced which significantly increases the complexity\todo{bad word i mean how hard it is to write not O-notation} of the algorithm. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are requires to remove the nested parallelism. Furthermore since each instance can have different dimensions a lot of standard techniques cannot be used and indexing into arrays becomes a bit harder. 
@@ -26,3 +28,5 @@ Given multiple instances of linear programs a lot of nested parallelism is intro
 One of the key observations we made was the fact that a lot of the nested parallelism came from the same values. Iotas over the same properties of instances were being used multiple times and the same with other index based helper arrays. These arrays do not change over time for each instance and therefore can be computed once such that their expensive constant time overhead will be amortized over the iterations of pivots each instance goes through. 
 
 The original entering variable and leaving variable methods consisted of a reduces\todo{maybe more} which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result on the CPU code version but wrong results on the GPU version. The problem originated from the fact that the neutral element can be places on both sides which we had not taken into consideration and only handled it for the left side. This emphasizes the importance of testing and perhaps using modules for ensuring that operators are indeed parallel.  
+
+The implemented solution can be seen in file \texttt{simplex-reduced-flat-multi.fut} \todo{renmae}.

@@ -16,7 +16,7 @@ public class Benchmark {
      * type T and a timer. The function should time its critical portion using the timer.
      */
     public static <T> void benchmark(String msg, BiConsumer<T, Timer> f, T arg) {
-        int n = 10, count = 1, totalCount = 0;
+        int n = 3, count = 1, totalCount = 0;
         double runningTime = 0.0, st = 0.0, sst = 0.0;
         do {
             count *= 2;

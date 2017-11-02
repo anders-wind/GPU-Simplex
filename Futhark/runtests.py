@@ -171,38 +171,34 @@ class FutharkTestConverter(object):
            max_v = max num of variables (aka n, c vector length, columns in A)
            max_c = max num of constants (aka m, b vector length, rows in A)
         '''
-        reader = FutharkTestReader(test_file)
+        self.reader = FutharkTestReader(test_file)
         self.output_dir = output_dir
         self.output_in_file = output_in_file
         self.output_out_file = output_out_file
-        self.params = reader.read_params()
-        self.a_constraints = reader.read_a_constraints()
-        self.b_constants = reader.read_b_constants()
-        self.c_coefficients = reader.read_c_coefficients()
-        self.results = reader.read_results()
+        self.params = self.reader.read_params()
         self.padding = [(max_v - v, max_c - c) for (v,c) in self.params]
 
     def convert_nested_single(self, iw, ow):
-        iw.write_matrices(pad_constraints(self.a_constraints, self.padding))
-        iw.write_arrays(pad_constants(self.b_constants, self.padding))
-        iw.write_arrays(pad_coefficients(self.c_coefficients, self.padding))
-        ow.write_floats(self.results)
+        iw.write_matrices(pad_constraints(self.reader.read_a_constraints(), self.padding))
+        iw.write_arrays(pad_constants(self.reader.read_b_constants(), self.padding))
+        iw.write_arrays(pad_coefficients(self.reader.read_c_coefficients(), self.padding))
+        ow.write_floats(self.reader.read_results())
 
     def convert_flat_single(self, iw, ow):
-        padded_a = pad_constraints(self.a_constraints, self.padding)
+        padded_a = pad_constraints(self.reader.read_a_constraints(), self.padding)
         iw.write_arrays(flatten_2dim_inner(padded_a))
-        iw.write_arrays(pad_constants(self.b_constants, self.padding))
-        iw.write_arrays(pad_coefficients(self.c_coefficients, self.padding))
-        ow.write_floats(self.results)
+        iw.write_arrays(pad_constants(self.reader.read_b_constants(), self.padding))
+        iw.write_arrays(pad_coefficients(self.reader.read_c_coefficients(), self.padding))
+        ow.write_floats(self.reader.read_results())
 
     def convert_flat_multi(self, iw, ow):
-        iw.write_floats(flatten_2dim(self.a_constraints))
-        iw.write_floats(flatten_1dim(self.b_constants))
-        iw.write_floats(flatten_1dim(self.c_coefficients))
+        iw.write_floats(flatten_2dim(self.reader.read_a_constraints()))
+        iw.write_floats(flatten_1dim(self.reader.read_b_constants()))
+        iw.write_floats(flatten_1dim(self.reader.read_c_coefficients()))
         (vs,cs) = zip(*self.params)
         iw.write_elements(cs)
         iw.write_elements(vs)
-        ow.write_floats(self.results)
+        ow.write_floats(self.reader.read_results())
 
     def convert(self, mode):
         prefix = FutharkFormat.get_prefix(mode)
@@ -253,7 +249,7 @@ def doit(args):
         n,v,c = args.number, args.variables, args.constants
         if not(args.no_gen or args.convert):
             print('Generating test data: N={0}, V={1}, C={2}'.format(n,v,c))
-            test_file = tmp_prefix+'test.file'
+            test_file = os.path.join(test_dir, 'cplex_'+test_in) #tmp_prefix+'test.file'
             generate_test_data(test_file,n,v,c)
 
         if args.convert:
