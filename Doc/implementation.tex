@@ -7,25 +7,14 @@ The instance generator can be used to generate multiple instances of different s
 
 To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format. 
 
-\subsection{Parallel on Multiple Instances}
-Given multiple instances of linear programs, each can be solved independently. This allows for a trivial parallelism where each solution is solved in parallel which corresponds to a map over the instances with the simplex solver as operator. Since only one dimension has to be computed in parallel it is not necessary to flatten the input. For this type of parallelism to be performant\todo{not a word} the number of instances must be near or exceed the number of threads the GPU has to offer - whereas a small number of instances would not utilize the level of parallelism the GPU has to offer. It would also seem most realistic if the program would do better on small instances that would require less memory bandwidth and operations for each thread.
-
-The implemented solution can be seen in file \texttt{simplex-reduced.fut} \todo{rename}.
-
-\subsection{Parallel Simplex on Single Instance}
-Given a single instance of a linear program, to compute the result in parallel a few obstacles has to be addressed. Since part of the input is a matrix and the matrix has to be updated potentially multiple times on all rows and columns a flat representation of the matrix is created. In the original $pivot$ function there was nested parallelism in the form of a map inside a map, but since the matrix was flattened the nested map operator simply becomes a single map over the entire matrix's. This allows us to have full parallelism on the operations on the matrix. 
-
-One of the main obstructions of parallelism in simplex is the fact that pivots are required to happen sequentially since the result of each pivot is the input to the next, and furthermore the number of pivots required is unknown. This is a very limiting factor since there in worst case can be exponentially many pivots, meaning this is a dimension which in worst case could be the most dominant.
-
+\subsection{Futhark Implementation}
+Outer Parallel Multi-Simplex:
 The implemented solution can be seen in file \texttt{simplex-reduced-flat.fut} \todo{rename}.
 
-\subsection{Parallel Simplex on Multiple Instances}
-Given multiple instances of linear programs a lot of nested parallelism is introduced which significantly increases the complexity\todo{bad word. I mean how hard it is to write the code, not the O-notation complexity} of an algorithm is parallel in both dimension. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are requires to remove the nested parallelism. Furthermore since each instance can have different dimensions a lot of standard techniques cannot be used and indexing into arrays becomes a bit harder.
+\newpar
+Inner Parallel Multi-Simplex:
+The implemented solution can be seen in file \texttt{simplex-reduced.fut} \todo{rename}.
 
-One of the key observations we made was the fact that a lot of the nested parallelism came from the same values. Iotas and other helper arrays were created over the same constant properties which only changed from instance to instance. Therefore most of these arrays can be computed once such that their expensive constant time overhead will be amortized over the iterations of pivots each instance goes through.
-
-The original entering variable and leaving variable methods consisted of a reduces\todo{maybe more} which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong results on the parallel. The problem originated from the fact that the neutral element can be places on both sides of the operator, which we had not taken into consideration and only handled it for the left side. This emphasizes the importance of testing and perhaps using modules for ensuring that operators are indeed parallel.
-
-Like the parallel simplex on a single instance it is not possible to run the pivots in parallel. This has all the same implications but with the added problem that the number of pivots the threads execute now always corresponds to the one instance with the most pivots. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This problem is mitigated if the level of parallelism does not exceed the thread capacity of the hardware and therefore only becomes a problem on many very large instances.
-
+\newpar
+Fully Parallel Multi-Simplex:
 The implemented solution can be seen in file \texttt{simplex-reduced-flat-multi.fut} \todo{rename}.
