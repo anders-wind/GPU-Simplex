@@ -32,11 +32,23 @@ public class InstanceGenerator {
         }
 
         // initialize the coefficients of the constraints
-        for (int i = 0; i < constraintNumber; i++) {
-            for (int j = 0; j < variableNumber; j++) {
-                // coefficients have to be non-zero, otherwise we are guaranteed to have
-                // an unbounded problem
-                constraints[i][j] = random.nextInt(100) + 1;
+        for (int j = 0; j < variableNumber; j++) {
+
+            // at least one coefficient in each column has to be non-zero,
+            // otherwise we are guaranteed to have an unbounded problem
+            boolean allZero = true;
+
+            for (int i = 0; i < constraintNumber; i++) {
+
+                int constraintCoefficient = random.nextInt(101);
+                constraints[i][j] = constraintCoefficient;
+                if (constraintCoefficient != 0) allZero = false;
+            }
+
+            if (allZero) {
+                int nonzeroCoefficient = random.nextInt(101) + 1;
+                int nonzeroRow = random.nextInt(constraintNumber);
+                constraints[nonzeroRow][j] = nonzeroCoefficient;
             }
         }
         return new SimplexInstance(constraints, initialConstants, initialCoefficients);
