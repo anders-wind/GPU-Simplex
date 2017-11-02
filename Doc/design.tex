@@ -7,16 +7,21 @@ The bulk of the work in the Simplex algorithm happens in the convergence loop co
 
 Nevertheless, the execution time under a parallel pivot will still be dominated by the number of iterations in the convergence loop, which is worst-case exponential in the size of the problem, limiting the potential gain from parallelisation.
 
-\subsection{Approach}
-Our approach. Something about multiple instances. Three versions. Notes for the versions: thoughts on the amount of scans, transposition for memory coalescing, hoisting shared stuff outside of the loop, the significance of entering and leaving variable.
+\subsection{Our approach}
+To get around the hard limit on parallelisation by the convergence loop, our approach is to solve several linear program instances in bulk. The idea is to amortise the convergence time across multiple instances. This approach is hereafter referred to as Multi-Simplex.
+
+In order to explore the effects of parallelism, we implement three versions of the algorithm that exploit different degrees of parallelism: outer parallel across instances, inner parallel across Simplex, and fully parallel across instances and Simplex.
 
 \subsubsection{Assumptions and limitations}
-Input is:
+We make a number of assumptions about the linear program instances in order to simplify the Simplex algorithm. In particular, we assume the instances:
 \begin{itemize}
-\item bounded
-\item non-degenerate
-\item super dense (i.e. not sparse)
+\item \textbf{Are bounded}: an instance is unbounded if its objective value can become arbitrarily large (for a maximisation problem). It is easy to detect this, but we assume all our inputs are well-formed so as to focus on the performance of the bounded case.
+\item \textbf{Are dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representation, e.g. using the Revised Simplex algorithm. However, this also significantly decreases the level of parallelism. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
+\item \textbf{Have an initial feasible basic solution}: instances are not guaranteed to begin in the feasible region and so Simplex typically has an initialisation procedure which ensures this, or reports that the linear program is infeasible. The procedure is similar to Simplex itself, so for simplicity, we exclude it.
 \end{itemize}
+We do \textit{not} assume that Simplex will not cycle, or that the multiple instances are the same size.
+
+The selection of the entering and leaving variables determine how fast the loop converges, but there is no general rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have a useful property: it guarantees that Simplex does not enter a degenerate case and cycles, i.e. the algorithm will eventually terminate.
 
 \subsubsection{Outer Parallel Multi-Simplex}
 Given multiple instances of linear programs, each can be solved independently. This allows for a trivial parallelism where each solution is solved in parallel which corresponds to a map over the instances with the simplex solver as operator. Since only one dimension has to be computed in parallel it is not necessary to flatten the input. For this type of parallelism to be performant\todo{not a word} the number of instances must be near or exceed the number of threads the GPU has to offer - whereas a small number of instances would not utilize the level of parallelism the GPU has to offer. It would also seem most realistic if the program would do better on small instances that would require less memory bandwidth and operations for each thread.
