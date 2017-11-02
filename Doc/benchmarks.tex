@@ -1,13 +1,13 @@
 % !TeX spellcheck=en_GB
 \section{Benchmarks}
 \subsection{Benchmark Environment}
-The off the shelf algorithm used to compare to our solution is CPLEX which is developed and maintained by IBM\todo{ref to website}. It is available to use for students and faculty for free and is one of the most used optimization frameworks by companies world wide and can solve both linear and integer linear programs very efficiently.
+To compare to our solution with an off the shelf algorithm, the CPLEX framework was chosen, which is developed and maintained by IBM\todo{footnote to website}. It is available to use for students and faculty for free and is one of the most used optimization frameworks and can solve both linear and integer linear programs very efficiently.
 
-We tested the implementations on a Ubuntu \todo{version} Server with a Intel xxx\todo{xxx}, yyy memory\todo{yyy} and with a Nvidia GTX 780ti \todo{check}. The only exception was the CPLEX, and sequential-reduced\todo{name} which was run on a ...\todo{...} due to the fact that we did not have the permissions to install the proprietary software on the server.
+We tested the GPU implementations on an Ubuntu \todo{version} Server with an Intel xxx\todo{xxx}, yyy memory\todo{yyy} and with a Nvidia GTX 780ti \todo{check}. The sequential versions were tested on a ...\todo{...} due to the fact that we did not have the permissions to install CPLEX on the server.
 
-To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with an available GPU and that Futhark and Python\todo{any others?} are installed, see bla\todo{ref} to install Futhark.
+To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with an available GPU and that Futhark and Python\todo{any others?} are installed.
 
-We have chosen to benchmark on 4 different categories of tests which represents instances where different dimensions are the dominant or limited. By doing so different weaknesses in the implementations is revealed. 
+We have chosen to benchmark on four categories of tests which represents instances where different dimensions are the dominant or limited. By doing so different weaknesses in the implementations can be revealed. First category is one instance where the dimensions of the linear program is large. Second category is many small instances to showcase how well the algorithm handles parallelism across instances. Third category contains many instances of big size to allow for huge parallelism and the fourth category contains many instances of varying size to simulate potential real data which might not always be uniform. 
 
 \subsection{One big instance}
 \begin{table}[H]
@@ -83,4 +83,4 @@ As seen in table \ref{table:many_big_instances} the reduced-flat-multi implement
 
 \todo[inline]{graphs}
 
-As seen in table \ref{table:many_varying_instances} in this case the reduced-flat-multi shows its strength. The implementation is ambiguous on the varying sizes and utilizes this to the fullest. The weakness of parallelism on only 1 dimension shows since these will be slower when the opposite dimension is large and therefore take up time on the GPU where other threads will wait. But while reduced and reduced-flat is a factor x slower than the reduced-flat-multi they still achieve a factor x speed-up from the CPU versions.
+As seen in table \ref{table:many_varying_instances} in this case the reduced-flat-multi shows its strength. The implementation is ambiguous on the varying sizes and utilizes this to the fullest. The weakness of parallelism on only one dimension shows since these will be slower when the opposite dimension is large and therefore take up time on the GPU where other threads will wait. But while reduced and reduced-flat is a factor x slower than the reduced-flat-multi they still achieve a factor x speed-up from the CPU versions.
