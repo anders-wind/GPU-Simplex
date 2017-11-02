@@ -7,10 +7,12 @@ We tested the implementations on a Ubuntu \todo{version} Server with a Intel xxx
 
 To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with an available GPU and that Futhark and Python\todo{any others?} are installed, see bla\todo{ref} to install Futhark.
 
+We have chosen to benchmark on 4 different categories of tests which represents instances where different dimensions are the dominant or limited. By doing so different weaknesses in the implementations is revealed. 
+
 \subsection{One big instance}
 \begin{table}[H]
 	\centering
-	\label{table:one_big_instance}
+	\label{table:one-big-instance}
 	\begin{tabular}{|l|l|l|l|l|l|}\hline
 		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
 		&       &             &         &              &                    \\\hline
@@ -23,7 +25,7 @@ To run all the test categories, all the instance sizes with all the implementati
 \end{table}
 \todo[inline]{graphs}
 
-As seen table \ref{table:one_big_instance} the reduced-flat is the fastest implementation across all sizes. This is expected since it is is fully parallel on each instance while not having as much overhead as the reduced-flat-multi. Slowest of the GPU-parallel versions is the reduced which on a single instance is sequential which is also why we see faster running times of the CPU versions that this one, hence it is only running at the clock speed of the GPU which is significantly slower than the CPU. We also see that while the CPLEX is multi threaded the Futhark C-code is competitive even on the CPU. 
+As seen table \ref{table:one-big-instance} the reduced-flat is the fastest implementation across all sizes. This is expected since it is is fully parallel on each instance while not having as much overhead as the reduced-flat-multi. Slowest of the GPU-parallel versions is the reduced which on a single instance is sequential which is also why we see faster running times of the CPU versions that this one, hence it is only running at the clock speed of the GPU which is significantly slower than the CPU. We also see that while the CPLEX is multi threaded the Futhark C-code is competitive even on the CPU. 
 
 \subsection{Many small instances}
 \begin{table}[H]
