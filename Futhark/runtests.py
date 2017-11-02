@@ -253,7 +253,7 @@ def doit(args):
         n,v,c = args.number, args.variables, args.constants
         if not(args.no_gen or args.convert):
             print('Generating test data: N={0}, V={1}, C={2}'.format(n,v,c))
-            test_file = tmp_prefix+'test.file'
+            test_file = os.path.join(test_dir, 'cplex_'+test_in) #tmp_prefix+'test.file'
             generate_test_data(test_file,n,v,c)
 
         if args.convert:
