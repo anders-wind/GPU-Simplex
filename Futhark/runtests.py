@@ -17,15 +17,11 @@ test_out = 'gen_test_out.txt'
 tmp_prefix = 'tmpfutsimplex'
 
 class FutharkFormat:
-    '''Different futhark syntax test formats:
-        - nested single (one simplex instance, A constraints matrix is nested)
-        - flat single (one simplex instance, A constraints matrix is flat)
-        - flat multi (several simplex instances, all parameters are flat)
-       (this class is an enum hack)
+    '''Different futhark syntax test formats. (enum hack)
     '''
-    prefix = ['', 'flat_', 'multi_']
+    prefix = ['inner_', 'outer_', 'full_']
     All = range(len(prefix))
-    NestedSingle, FlatSingle, FlatMulti = All # 0, 1, 2
+    InnerParallel, OuterParallel, FullParallel = All # 0, 1, 2
     @staticmethod
     def get_prefix(val):
         return FutharkFormat.prefix[val]
@@ -178,20 +174,20 @@ class FutharkTestConverter(object):
         self.params = self.reader.read_params()
         self.padding = [(max_v - v, max_c - c) for (v,c) in self.params]
 
-    def convert_nested_single(self, iw, ow):
+    def convert_outer_parallel(self, iw, ow):
         iw.write_matrices(pad_constraints(self.reader.read_a_constraints(), self.padding))
         iw.write_arrays(pad_constants(self.reader.read_b_constants(), self.padding))
         iw.write_arrays(pad_coefficients(self.reader.read_c_coefficients(), self.padding))
         ow.write_floats(self.reader.read_results())
 
-    def convert_flat_single(self, iw, ow):
+    def convert_inner_parallel(self, iw, ow):
         padded_a = pad_constraints(self.reader.read_a_constraints(), self.padding)
         iw.write_arrays(flatten_2dim_inner(padded_a))
         iw.write_arrays(pad_constants(self.reader.read_b_constants(), self.padding))
         iw.write_arrays(pad_coefficients(self.reader.read_c_coefficients(), self.padding))
         ow.write_floats(self.reader.read_results())
 
-    def convert_flat_multi(self, iw, ow):
+    def convert_full_parallel(self, iw, ow):
         iw.write_floats(flatten_2dim(self.reader.read_a_constraints()))
         iw.write_floats(flatten_1dim(self.reader.read_b_constants()))
         iw.write_floats(flatten_1dim(self.reader.read_c_coefficients()))
@@ -205,12 +201,12 @@ class FutharkTestConverter(object):
         tin = os.path.join(self.output_dir, prefix + self.output_in_file)
         tout = os.path.join(self.output_dir, prefix + self.output_out_file)
         iw, ow = FutharkTestWriter(tin), FutharkTestWriter(tout)
-        if mode == FutharkFormat.NestedSingle:
-            self.convert_nested_single(iw, ow)
-        elif mode == FutharkFormat.FlatSingle:
-            self.convert_flat_single(iw, ow)
-        elif mode == FutharkFormat.FlatMulti:
-            self.convert_flat_multi(iw, ow)
+        if mode == FutharkFormat.OuterParallel:
+            self.convert_outer_parallel(iw, ow)
+        elif mode == FutharkFormat.InnerParallel:
+            self.convert_inner_parallel(iw, ow)
+        elif mode == FutharkFormat.FullParallel:
+            self.convert_full_parallel(iw, ow)
 
 # ---------------------------------------------------------------------------- #
 # External commands
