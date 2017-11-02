@@ -1,0 +1,13 @@
+Efficient Implementation of the Simplex Method on a CPU-GPU System - 2011:
+260 gti -- 
+One instance only.
+
+Double precision implementation is used in order to improve the quality of solutions. 
+
+Entering and leaving are faster on CPU than GPU. 
+
+Calculates pivot blockwise.
+
+Max size = 8000x8000
+
+For large non-sparse linear programming problems, we have obtained stable speedups around 12.5 - when compared to a CPU implementation.
