@@ -4,7 +4,7 @@
 \begin{table}[H]
 	\centering
 	\caption{My caption}
-	\label{my-label}
+	\label{tabel:one_big_instance}
 	\begin{tabular}{|l|l|l|l|l|l|}\hline
 		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
 		&       &             &         &              &                    \\\hline
@@ -12,12 +12,15 @@
 		&       &             &         &              &                   \\\hline
 	\end{tabular}
 \end{table}
+\todo[inline]{graphs}
+
+As seen table \ref{tabel:one_big_instance} the reduced-flat is the fastest implementation across all sizes. This is expected since it is is fully parallel on each instance while not having as much overhead as the reduced-flat-multi. Slowest of the GPU-parallel versions is the reduced which on a single instance is sequential which is also why we see faster running times of the CPU versions that this one, hence it is only running at the clock speed of the GPU which is significantly slower than the CPU. We also see that while the CPLEX is multi threaded the Futhark C-code is competitive even on the CPU. 
 
 \subsection{Many small instances}
 \begin{table}[H]
 	\centering
 	\caption{My caption}
-	\label{my-label}
+	\label{tabel:many_small_instances}
 	\begin{tabular}{|l|l|l|l|l|l|}\hline
 		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
 		&       &             &         &              &                    \\\hline
@@ -28,7 +31,8 @@
 
 \todo[inline]{graphs}
 
-\todo[inline]{discussion}
+As seen on table \ref{tabel:many_small_instances} the reduced version is the fastest. This is expected since it is parallel on the outer dimension which is the largest dimension in these test cases. Since each instance only require relatively little work the reduced-flat does relatively bad. It waits for each instanc eto complete before the next starts which also implies that it will move the transfer the data over to the GPU in multiple stages, increasing the overhead of the algorithm. The reduced-flat-multi does farely well since it also parallelize on the outer dimension but it is clear that the overhead for flattening the nested parallelism makes it slower than the reduced version. Furthermore it is clear that for a large number of instances the GPU clearly does better than the both of the CPU versions.
+
 
 \subsection{Many big instances}
 \begin{table}[H]
@@ -45,7 +49,7 @@
 
 \todo[inline]{graphs}
 
-\todo[inline]{discussion}
+
 
 \subsection{Many instances of varying size}
 \begin{table}[H]

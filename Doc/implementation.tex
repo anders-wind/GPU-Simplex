@@ -5,10 +5,7 @@ A simplex test instance consists of the coefficient vector, the constraints matr
 
 The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations.
 
-To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format.
-
-\subsection{Sequential Simplex}
-The sequential simplex algorithm which functions as the basis for the rest of the implementations is based on a compact version of the algorithm presented in [Cormin chapter 21]. The algorithm uses the matrix representation of the linear program and is fairly simple.  
+To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format. 
 
 \subsection{Parallel on Multiple Instances}
 Given multiple instances of linear programs, each can be solved independently. This allows for a trivial parallism where each solution is solved in parallel which corresponds to a map over the instances with the simplex solver as operator. Since only one dimension is to be computed in parallel it is not necessary to flatten the input. For this type of parallelism to be performant the number of instances must be near or exceed the number of threads the GPU has to offer - whereas a small number of instances would not utilize the level of parallelism the GPU has to offer. It would also seem most realistic if the program would do better on small instances that would require less memory bandwitdh and operations.
