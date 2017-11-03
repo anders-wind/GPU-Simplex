@@ -1,23 +1,22 @@
 % !TeX spellcheck=en_GB
 \section{Implementation}
 
-This section contains a description of our implementation of parallel Multi-Simplex in the GPU-parallel programming language Futhark.
+This section contains a description of our implementation of parallel Multi-Simplex in Futhark as well as our benchmarking strategy.
 
 \subsection{Futhark Implementations}
-The implementation of outer parallel Multi-Simplex can be seen in file \texttt{simplex-outer-parallel.fut}.
+We have implemented the three parallel versions of Multi-Simplex in the functional programming language Futhark, which generates code optimised for parallel execution on the GPU. The implementations roughly follow the pseudocode in Figure \ref{code:multi-simplex}, with the exception of the fully parallel version, which has been completely flattened.
 
-\newpar
-The implementation of inner parallel Multi-Simplex can be seen in file \texttt{simplex-inner-parallel.fut}.
+The implementations can be seen in files \texttt{simplex-outer-parallel.fut}, \texttt{simplex-inner-parallel.fut}, and \texttt{simplex-full-parallel.fut}.
 
-\newpar
-The implementation of fully parallel Multi-Simplex can be seen in file \texttt{simplex-full-parallel.fut}.
+To run the code, \todo{... instructions} This requires that you run on a machine with a GPU and that Futhark and Python are installed.
 
 \subsection{Test Instance Generation}
-A Simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. The coefficients and the constraints are random integers between 1 and 100. The constants are random integers between 100 and 500 to make sure the instances do not converge too quickly. Additionally, we ensure that all columns in the constraints matrix contain at least one non-zero variable. This is to ensure that the linear program is not unbounded.
+In order to test our implementation and generate data sets for benchmarking, we have implemented a Simplex instance generator in java. To compute the expected results, we use an off-the-shelf linear programming library, which is also the one we use for baseline comparison in the benchmarks.
 
-Afterwards, the instance is solved by an off-the-shelf algorithm to ensure that the solution can be solved and to provide the expected output. 
+\newpar A Simplex test instance consists of the constraints matrix $A$, the constants vector $b$, and the coefficients vector $c$.
+We choose coefficients and constraints to be random integers between 1 and 100. The constants are the upper bounds for the constraints, therefore we choose them to be random integers between 100 and 500 to make sure the instances do not converge too quickly. Additionally, we make sure that all columns in $A$ contain at least one non-zero variable. If there was a variable with all-zero coefficients in $A$, it would be completely unconstrained and the problem would be unbounded.
 
-The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations. Since Futhark does not allow irregular arrays, the test data for the versions that are not fully parallel must be padded with zeroes. \todo{also make sure the variable range is up to the constant value}
+\newpar The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations. Since Futhark does not allow irregular arrays, the test data for the versions that are not completely flattened must be padded with zeroes.
 
 To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format.
 
@@ -28,5 +27,3 @@ We tested the GPU implementations on a CentOS 7 Server with an Intel E5-4660 V4 
 implementation were tested on a Ubuntu 14.04 machine with 8 GB memory and an Intel i5-4200U, due to the fact that we did not have permission to install CPLEX on the server.
 
 \newpar We have chosen to benchmark on four categories of tests which represent instances where different dimensions are the dominant or limited. By doing so, different weaknesses in the implementations can be revealed. First category is one instance where the dimensions of the linear program is large. Second category is many small instances to showcase how well the algorithm handles parallelism across instances. Third category contains many instances of big size to allow for huge parallelism and the fourth category contains many instances of varying size to simulate potential real data which might not always be uniform.
-
-\newpar To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with a GPU and that Futhark and Python are installed.
