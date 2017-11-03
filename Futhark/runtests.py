@@ -2,6 +2,7 @@
 '''The evil test/benchmark script.'''
 
 from glob import glob
+from shutil import rmtree
 import argparse
 import itertools
 import os.path
@@ -253,6 +254,11 @@ def run_futhark(files, compiler='futhark-c', mode='test'):
 
 def doit(args):
     '''Main test runner. args are parsed command-line parameters.'''
+    if args.clean:
+        if os.path.isdir(test_dir):
+            rmtree(test_dir)
+        return
+
     if not(args.no_convert):
         convert_file, n, max_v, max_c = args.convert
         try:
@@ -325,6 +331,7 @@ def main():
         type=test_file)
     parser.add_argument('-x','--no-test-bench', help='Do not run any tests or benches (for use with --convert).', action='store_true')
     parser.add_argument('-n','--no-convert', help='Do not convert any tests, use ones already generated.', action='store_true')
+    parser.add_argument('-q','--clean', help='Remove generated files.', action='store_true')
     args = parser.parse_args()
     doit(args)
 

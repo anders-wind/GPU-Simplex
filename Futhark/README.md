@@ -19,7 +19,7 @@ Test all versions on the `basic` case with (this is also the default if `runtest
 
     ./runtests.py --test-all --convert tests/basic_4_3_3.test
 
-Benchmark all versions on the `many_small_instances` case with:
+Benchmark all versions on the `basic` case with:
 
     ./runtests.py --bench-all -convert tests/basic_4_3_3.test
 
