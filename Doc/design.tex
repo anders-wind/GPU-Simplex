@@ -46,12 +46,12 @@ The inner workings of \texttt{Pivot} are abstracted out to solely show the data 
 For simplification, we assume the following about the linear program instances:
 \begin{itemize}
 \item They are \textbf{bounded}: that is, they have a finite objective value.
-\item They are \textbf{dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representation. However, this also significantly decreases the level of parallelism. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
+\item They are \textbf{dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representations. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
 \item They have an \textbf{initial feasible basic solution}: instances are not guaranteed to begin in the feasible region and so Simplex typically has an initialisation procedure which either ensures this, or reports that the linear program is infeasible. The procedure is similar to Simplex itself, so for simplicity, we exclude it.
 \end{itemize}
 We do \textit{not} assume that Simplex will not cycle, or that the multiple instances are the same size.
 
-The selection of the entering and leaving variables determine how fast the loop converges, but there is no general rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have the useful property that it guarantees termination of the algorithm, i.e. it avoids cycles.
+The selection of the entering and leaving variables determine how fast the loop converges, but there is no general optimal rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have the useful property that it guarantees termination of the algorithm, i.e. it avoids cycles.
 
 \subsubsection{Outer Parallel Multi-Simplex}
 In this version, the multiple instances of linear programs are solved in parallel, but each individual instance is solved sequentially. This is exactly the version shown in Figure \ref{code:multi-simplex}, where the outer map is parallel. Since the inner dimension is computed sequentially, it is not necessary to flatten the input. We did not take transposition for memory-coalesced access into account, since we need to access the matrices from both rows and columns.
@@ -66,7 +66,7 @@ This type of parallelism is potentially useful for very large instances with man
 \subsubsection{Fully Parallel Multi-Simplex}
 In this version, the multiple instances are solved fully in parallel with Simplex rewritten to take in and solve several instances at once. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are required to remove the nested parallelism.
 
-Furthermore, since each instance can have different dimensions, we need a way to keep track of their position inside each flattened array of \texttt{A}, \texttt{b}, and \texttt{c}. We therefore add two parameters, shape arrays \texttt{ns} and \texttt{ms} containing the number of variables $n$ and constraints $m$ for each instance, since we do not assume instances have the same size.
+Furthermore, since each instance can have different dimensions, we need a way to keep track of their position inside each flattened array of \texttt{A}, \texttt{b}, and \texttt{c}. We therefore add two parameters, shape arrays \texttt{ns} and \texttt{ms} containing the number of variables $n$ and constraints $m$ for each instance.
 
 \newpar
 Let $h$ be the number of instances, and let $A_{kij}$ denote the element on the $i$'th row and $j$'th column in the $k$'th instance in $A$. To find the element $A_{kij}$ in \texttt{A}, we need to know where instance \texttt{k} starts in \texttt{A}. Each instance \texttt{k} takes up \texttt{ns[k] * ms[k]} entries in \texttt{A}. We therefore create \texttt{segment\_indices}, an array containing the indices for which each individual instance begins in \texttt{A}.
@@ -89,8 +89,6 @@ A key observation here is that the three indexing arrays stay constant across th
 
 \newpar
 The original entering variable and leaving variable methods consisted of a reduce which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong result in parallel. The problem originated from the fact that the neutral element can be placed on both sides of the operator, which we had not taken into consideration and only handled it for the left side.
-
-As the entering and leaving variables are calculated in each iteration, they could potentially dominate the execution time since they both include expensive scans whereas pivot only contains maps. It is possible that at least the entering variable function would perform better if implemented with a sequential while loop.
 
 \newpar
 As for the inner parallel version, the convergence loop cannot be parallelised. This has all the same implications, but with the added problem that the number of iterations executed now always corresponds to the most expensive instance. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This only becomes a problem if the level of parallelism exceeds the resources of the hardware though.
