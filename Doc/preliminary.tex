@@ -23,13 +23,13 @@ The variables can be seen as dimensions in a $n$-dimensional coordinate system a
 
 \begin{figure}[H]
 	\centering
-	\label{key}
 	\includegraphics[width=0.6\textwidth]{Linear_Programming_Feasible_Region}
 	\caption{The graphical interpretation of a linear program with two variables and three constraints. Source: \url{https://en.wikipedia.org/wiki/Feasible_region}}
 	\graphicspath{dir-list}
+	\label{key}
 \end{figure}
 
-There can be multiple optimal solutions to a linear program, so to validate the correctness of the result, typically only the value of the objective function is used\todo{maybe reformulate}.
+There can be multiple optimal solutions to a linear program, so to validate the correctness of the result, typically only the value of the objective function is used.
 
 \subsubsection{The Simplex Algorithm}
 Simplex is a specific algorithm for solving linear programs. It finds the optimal solution by traversing the extreme points of the feasible region, continuously increasing the objective value.
@@ -49,7 +49,6 @@ One way to represent the constraints and variables is with vectors and matrices.
 	
 \begin{table}[H]
 	\centering
-	\label{my-label}
 	\begin{tabular}{|l|l|l|l|l|}
 		\hline
 		& $x_1$                       & $x_2$                        & $x_3$                       &                            \\ \hline
@@ -58,4 +57,5 @@ One way to represent the constraints and variables is with vectors and matrices.
 		$x_5$ & \cellcolor[HTML]{FFCCC9}-10 & \cellcolor[HTML]{FFCCC9}0    & \cellcolor[HTML]{FFCCC9}-7  & \cellcolor[HTML]{9AFF99}17 \\ \hline
 	\end{tabular}
 	\caption{Matrix representation of a linear program with three variables and two constraints. The red cells correspond to the matrix $A$, the green to vector $b$, and the blue to vector $c$.}
+	\label{my-label}
 \end{table}

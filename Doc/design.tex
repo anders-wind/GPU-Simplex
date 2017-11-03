@@ -84,11 +84,10 @@ segment_iotas = segmented_scan_exc (+) 0 flags [1,1,...,1]
 \end{figure}
 \noindent If we map over \texttt{segment\_numbers} and \texttt{segment\_iotas}, we can get the instance number and the index into the instance number, respectively, and from that calculate \texttt{p}. Something similar can be done for \texttt{c} and \texttt{b}, but where the entries in \texttt{segment\_iotas} are just the direct indices instead of the flattened matrix indices.
 
-\newpar
 A key observation here is that the three indexing arrays stay constant across the iterations of the convergence loop. They can therefore be hoisted outside the loop and only need to be calculated once, such that the cost is amortised over the iterations in the loop.
 
 \newpar
 The original entering variable and leaving variable methods consisted of a reduce which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong result in parallel. The problem originated from the fact that the neutral element can be placed on both sides of the operator, which we had not taken into consideration and only handled it for the left side.
 
 \newpar
-As for the inner parallel version, the convergence loop cannot be parallelised. This has all the same implications, but with the added problem that the number of iterations executed now always corresponds to the most expensive instance. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This only becomes a problem if the level of parallelism exceeds the resources of the hardware though.
+Similarly to the inner parallel version, the convergence loop cannot be parallelised. This has all the same implications, but with the added problem that the number of iterations executed now always corresponds to the most expensive instance. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This only becomes a problem if the level of parallelism exceeds the resources of the hardware though.

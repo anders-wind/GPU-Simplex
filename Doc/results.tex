@@ -10,17 +10,16 @@ In this test category, we vary the size of the linear program while keeping the 
 
 \begin{figure}[H]
 	\centering
-	\label{fig:one}
 	\includegraphics[width=\textwidth]{one-big}
 	\caption{The average running time of the different implementations, with one instance with high number of C and V}
 	\graphicspath{dir-list}
+	\label{fig:one}
 \end{figure}
 
 \todo[inline]{Skal opdateres. Note to michael: change c and v to m and n. bigger text on graphs}
 
 As seen in Figure \ref{fig:one}, the inner parallel version is the fastest implementation across all tests. This is expected since it is parallel on an instance while not having as much overhead as the fully parallel version. The outer parallel version executed on the GPU is not shown on the graph, because we were not able to run it on these tests. We encountered an OpenCL error, which might be due to memory allocation of big instances on a single GPU thread.
 \todo{compare cpu with gpu (with reservations)}
-\todo{fix da labels}
 
 \subsection{Many small instances}
 
@@ -28,10 +27,10 @@ In this test category, we vary the number of instances while keeping the sizes w
 
 \begin{figure}[H]
 	\centering
-	\label{fig-small}
 	\includegraphics[width=\textwidth]{many-small}
 	\caption{The average running time of the different implementations, on different sizes of N with a low number of C and V.}
 	\graphicspath{dir-list}
+	\label{fig-small}
 \end{figure}
 \todo[inline]{Skal opdaters}
 
@@ -44,10 +43,10 @@ In this test category, we vary the number of instances while keeping the sizes w
 
 \begin{figure}[H]
 	\centering
-	\label{fig-big}
 	\includegraphics[width=\textwidth]{many-big}
 	\caption{The average running time of the different implementations, on different sizes of N with high numbers of C and V}
 	\graphicspath{dir-list}
+	\label{fig-big}
 \end{figure}
 \todo[inline]{Skal opdaters}
 
@@ -58,10 +57,10 @@ In this test category, we vary the number of instances while keeping the sizes w
 
 \begin{figure}[H]
 	\centering
-	\label{fig-vary}
 	\includegraphics[width=\textwidth]{many-varying}
 	\caption{The average running time of the different implementations, on different sizes of N with C and V varying a lot.}
 	\graphicspath{dir-list}
+	\label{fig-vary}
 \end{figure}
 
 \todo{parameters in caption}
