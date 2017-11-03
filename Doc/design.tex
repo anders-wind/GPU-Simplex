@@ -12,58 +12,85 @@ To get around the hard limit on parallelisation by the convergence loop, our app
 
 In order to explore the effects of parallelism, we implement three versions of the algorithm that exploit different degrees of parallelism: outer parallel across instances, inner parallel across Simplex, and fully parallel across instances and Simplex.
 
-We base the sequential Simplex algorithm on the algorithm presented in [Introduction to Algorithms]\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al. The basic Multi-Simplex is shown in pseudocode below.
+We base the sequential Simplex algorithm on the algorithm presented in [Introduction to Algorithms]\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al. The basic Multi-Simplex algorithm along with pivot is shown in pseudocode in Figure \ref{code:multi-simplex}.
 
 \begin{figure}[H]
-\label{code:multi-simplex}
 \begin{verbatim}
-Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]):
+Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
   map
-    (\A b c ->
-      e = entering_variable c
-      while e != -1:
-        l = leaving_variaable A b e
-        (A,b,c,v) = pivot A b c v e l
-        e = entering_variable c
+    (\A b c =>
+      v = 0
+      e = Entering-Variable(c)
+      while (e != -1) do
+        l = Leaving-Variable(A,b,e)
+        (A,b,c,v) = Pivot(A,b,c,v,e,l)
+        e = Entering-Variable(c)
+      done
       return v
     )
     As bs cs
+
+Pivot(A[m][n], b[m], c[n], v, e, l) =
+  newA = map (\i => map (\j -> FuncA(A,i,j,e,l)) (iota n)) (iota m)
+  newB = map (\i => FuncB(A,b,i,e,l)) (iota m)
+  newC = map (\i -> FuncC(newA,c,i,e,l)) (iota n)
+  newV = FuncV(newB,c,v,e)
+  return (newA, newB, newC, newV)
 \end{verbatim}
-\caption{Pseudocode for Multi-Simplex.}
+\caption{Pseudocode for \texttt{Multi-Simplex} and \texttt{Pivot}. Here \texttt{h} is the number of instances and an instance \texttt{i} is represented by the constraints matrix \texttt{As[i]}, constants vector \texttt{bs[i]}, and coefficients vector \texttt{cs[i]}.\newline
+The inner workings of \texttt{Pivot} are abstracted out to solely show the data dependencies and parallel operations (\texttt{Funcx} functions consist of small if-statements and arithmetic operations). \texttt{Entering-Variable} and \texttt{Leaving-Variable} are not included here, but both contain a reduce and an iota.}
+\label{code:multi-simplex}
 \end{figure}
-Here \texttt{h} is the number of instances and an instance \texttt{i} is represented by the constraints matrix \texttt{As[i]}, constants vector \texttt{bs[i]}, and coefficients vector \texttt{cs[i]}.
 
 \subsubsection{Assumptions and Limitations}
-We make a number of assumptions about the linear program instances in order to simplify the Simplex algorithm. In particular, we assume the instances:
+For simplification, we assume the following about the linear program instances:
 \begin{itemize}
-\item \textbf{Are bounded}: an instance is unbounded if its objective value can become arbitrarily large (for a maximisation problem).
-\item \textbf{Are dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representation. However, this also significantly decreases the level of parallelism. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
-\item \textbf{Have an initial feasible basic solution}: instances are not guaranteed to begin in the feasible region and so Simplex typically has an initialisation procedure which ensures this, or reports that the linear program is infeasible. The procedure is similar to Simplex itself, so for simplicity, we exclude it.
+\item They are \textbf{bounded}: that is, they have a finite objective value.
+\item They are \textbf{dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representation. However, this also significantly decreases the level of parallelism. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
+\item They have an \textbf{initial feasible basic solution}: instances are not guaranteed to begin in the feasible region and so Simplex typically has an initialisation procedure which either ensures this, or reports that the linear program is infeasible. The procedure is similar to Simplex itself, so for simplicity, we exclude it.
 \end{itemize}
 We do \textit{not} assume that Simplex will not cycle, or that the multiple instances are the same size.
 
 The selection of the entering and leaving variables determine how fast the loop converges, but there is no general rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have the useful property that it guarantees termination of the algorithm, i.e. it avoids cycles.
 
 \subsubsection{Outer Parallel Multi-Simplex}
-In this version, the multiple instances of linear programs are solved in parallel, but each individual instance is solved sequentially. This corresponds to a map over the instances with the Simplex solver as operator. Since only the outer dimension has to be computed in parallel, it is not necessary to flatten the input.
+In this version, the multiple instances of linear programs are solved in parallel, but each individual instance is solved sequentially. This is exactly the version shown in Figure \ref{code:multi-simplex}, where the outer map is parallel. Since the inner dimension is computed sequentially, it is not necessary to flatten the input. We did not take transposition for memory-coalesced access into account, since we need to access the matrices from both rows and columns.
 
 For this type of parallelism to perform well, the number of instances must be near or exceed the number of threads the GPU has to offer, as a small number of instances would not properly exploit the parallelism.
 
 \subsubsection{Inner Parallel Multi-Simplex}
-In this version, the multiple instances are solved sequentially, but each individual instance is solved in parallel. In particular, this exploits the parallelism of the pivot procedure. The $A$ matrix is updated during pivot and introduces a small amount of nested parallelism. We therefore flatten the $A$ matrix and the nested map operator simply becomes a single map. This is the only change needed to facilitate full parallelism in pivot.
+In this version, the multiple instances are solved sequentially, but each individual instance is solved in parallel. In particular, this exploits the parallelism of \texttt{Pivot}. The \texttt{A} matrix is updated with a nested map during \texttt{Pivot}, and this nested map is flattened into a single map. This is the only change needed to facilitate full parallelism in \texttt{Pivot}.
 
-This type of parallelism is potentially useful for very large instances with many constraints and variables whose coefficients in $A$, $b$, and $c$ need to be updated often. The main bottleneck will then likely be the number of iterations needed for convergence for each instance as well as the outer sequential loop across instances.
+This type of parallelism is potentially useful for very large instances with many constraints and variables that are updated in parallel in \texttt{Pivot}. The main bottleneck will then likely be the number of iterations needed for convergence for each instance as well as the outer sequential loop across instances.
 
 \subsubsection{Fully Parallel Multi-Simplex}
-In this version, the multiple instances are solved fully in parallel with Simplex rewritten to take in and solve several instances at once. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are required to remove the nested parallelism. Furthermore, since each instance can have different dimensions, we need a way to keep track of their position inside each flattened array of $A$, $b$, and $c$.
+In this version, the multiple instances are solved fully in parallel with Simplex rewritten to take in and solve several instances at once. Every previous map, iota, reduce or scan operation is now inside a parallel map and therefore flattening techniques are required to remove the nested parallelism.
+
+Furthermore, since each instance can have different dimensions, we need a way to keep track of their position inside each flattened array of \texttt{A}, \texttt{b}, and \texttt{c}. We therefore add two parameters, shape arrays \texttt{ns} and \texttt{ms} containing the number of variables $n$ and constraints $m$ for each instance, since we do not assume instances have the same size.
 
 \newpar
-Due to the flattening, the main algorithm now also needs a shape array for $n$ and $m$ to determine the number of variables $n$ and constraints $m$ for each instance. To access $A$, $b$, and $c$ with a map, we need indices ... to be continued.
+Let $h$ be the number of instances, and let $A_{kij}$ denote the element on the $i$'th row and $j$'th column in the $k$'th instance in $A$. To find the element $A_{kij}$ in \texttt{A}, we need to know where instance \texttt{k} starts in \texttt{A}. Each instance \texttt{k} takes up \texttt{ns[k] * ms[k]} entries in \texttt{A}. We therefore create \texttt{segment\_indices}, an array containing the indices for which each individual instance begins in \texttt{A}.
 
-One of the key observations we made was the fact that a lot of the nested parallelism came from the same values. Iotas and other helper arrays were created over the same constant properties which only changed from instance to instance. Therefore most of these arrays can be computed once such that their expensive constant time overhead will be amortized over the iterations of pivots each instance goes through.
+If we want to create a new \texttt{A} using map, we need two arrays of the same length as \texttt{A} for indexing, \texttt{segment\_numbers} and \texttt{segment\_iotas}. The idea is that for some absolute index \texttt{p}, \texttt{A[p]} corresponds to $A_{kij}$ if \texttt{k = segment\_numbers[p]} and \texttt{i * ns[k] + j = segment\_iotas[p]}. The three indexing arrays can be calculated as shown in Figure \ref{code:index}.
+\begin{figure}[H]
+\begin{verbatim}
+segment_indices = scan_exc (+) 0 (map (*) ns ms)
+flags = scatter [0,0,...,0] segment_indices [1,1,...,1]
+segment_numbers = map (-1) (scan_inc (+) 0 flags)
+segment_iotas = segmented_scan_exc (+) 0 flags [1,1,...,1]
+\end{verbatim}
+\caption{Pseudocode for calculating indexing arrays.}
+\label{code:index}
+\end{figure}
+\noindent If we map over \texttt{segment\_numbers} and \texttt{segment\_iotas}, we can get the instance number and the index into the instance number, respectively, and from that calculate \texttt{p}. Something similar can be done for \texttt{c} and \texttt{b}, but where the entries in \texttt{segment\_iotas} are just the direct indices instead of the flattened matrix indices.
 
-The original entering variable and leaving variable methods consisted of a reduce which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong results in parallel. The problem originated from the fact that the neutral element can be placed on both sides of the operator, which we had not taken into consideration and only handled it for the left side.
+\newpar
+A key observation here is that the three indexing arrays stay constant across the iterations of the convergence loop. They can therefore be hoisted outside the loop and only need to be calculated once, such that the cost is amortised over the iterations in the loop.
 
-Like the inner parallel version, the convergence loop cannot be parallelised. This has all the same implications, but with the added problem that the number of iterations executed now always corresponds to the most expensive instance. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This only becomes a problem if the level of parallelism exceeds the resources of the hardware.
+\newpar
+The original entering variable and leaving variable methods consisted of a reduce which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong result in parallel. The problem originated from the fact that the neutral element can be placed on both sides of the operator, which we had not taken into consideration and only handled it for the left side.
 
-Notes for the versions: thoughts on the amount of scans, transposition for memory coalescing, hoisting shared stuff outside of the loop, the significance of entering and leaving variable.
+As the entering and leaving variables are calculated in each iteration, they could potentially dominate the execution time since they both include expensive scans whereas pivot only contains maps. It is possible that at least the entering variable function would perform better if implemented with a sequential while loop.
+
+\newpar
+As for the inner parallel version, the convergence loop cannot be parallelised. This has all the same implications, but with the added problem that the number of iterations executed now always corresponds to the most expensive instance. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This only becomes a problem if the level of parallelism exceeds the resources of the hardware though.
