@@ -15,10 +15,10 @@ In order to explore the effects of parallelism, we implement three versions of t
 We base the sequential Simplex algorithm on the algorithm presented in [Introduction to Algorithms]\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al. The basic Multi-Simplex algorithm along with pivot is shown in pseudocode in Figure \ref{code:multi-simplex}.
 
 \begin{figure}[H]
-\begin{verbatim}
+\begin{lstlisting}
 Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
   map
-    (\A b c =>
+    (\A b c ->
       v = 0
       e = Entering-Variable(c)
       while (e != -1) do
@@ -31,12 +31,12 @@ Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
     As bs cs
 
 Pivot(A[m][n], b[m], c[n], v, e, l) =
-  newA = map (\i => map (\j -> FuncA(A,i,j,e,l)) (iota n)) (iota m)
-  newB = map (\i => FuncB(A,b,i,e,l)) (iota m)
+  newA = map (\i -> map (\j -> FuncA(A,i,j,e,l)) (iota n)) (iota m)
+  newB = map (\i -> FuncB(A,b,i,e,l)) (iota m)
   newC = map (\i -> FuncC(newA,c,i,e,l)) (iota n)
   newV = FuncV(newB,c,v,e)
   return (newA, newB, newC, newV)
-\end{verbatim}
+\end{lstlisting}
 \caption{Pseudocode for \texttt{Multi-Simplex} and \texttt{Pivot}. Here \texttt{h} is the number of instances and an instance \texttt{i} is represented by the constraints matrix \texttt{As[i]}, constants vector \texttt{bs[i]}, and coefficients vector \texttt{cs[i]}.\newline
 The inner workings of \texttt{Pivot} are abstracted out to solely show the data dependencies and parallel operations (\texttt{Funcx} functions consist of small if-statements and arithmetic operations). \texttt{Entering-Variable} and \texttt{Leaving-Variable} are not included here, but both contain a reduce and an iota.}
 \label{code:multi-simplex}
@@ -73,12 +73,12 @@ Let $h$ be the number of instances, and let $A_{kij}$ denote the element on the 
 
 If we want to create a new \texttt{A} using map, we need two arrays of the same length as \texttt{A} for indexing, \texttt{segment\_numbers} and \texttt{segment\_iotas}. The idea is that for some absolute index \texttt{p}, \texttt{A[p]} corresponds to $A_{kij}$ if \texttt{k = segment\_numbers[p]} and \texttt{i * ns[k] + j = segment\_iotas[p]}. The three indexing arrays can be calculated as shown in Figure \ref{code:index}.
 \begin{figure}[H]
-\begin{verbatim}
+\begin{lstlisting}
 segment_indices = scan_exc (+) 0 (map (*) ns ms)
 flags = scatter [0,0,...,0] segment_indices [1,1,...,1]
 segment_numbers = map (-1) (scan_inc (+) 0 flags)
 segment_iotas = segmented_scan_exc (+) 0 flags [1,1,...,1]
-\end{verbatim}
+\end{lstlisting}
 \caption{Pseudocode for calculating indexing arrays.}
 \label{code:index}
 \end{figure}
