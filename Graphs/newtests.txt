@@ -1,0 +1,68 @@
+small:
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > small_1000_10_10.test
+Simplex solver            mean:        229981.6 us, stddev:   55714.60 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > small_2000_10_10.test
+Simplex solver            mean:        412095.8 us, stddev:   81820.84 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > small_3000_10_10.test
+Simplex solver            mean:        654002.7 us, stddev:  156895.81 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > small_4000_10_10.test
+Simplex solver            mean:        777560.4 us, stddev:   71391.85 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > small_5000_10_10.test
+Simplex solver            mean:        962191.4 us, stddev:   95941.81 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > small_6000_10_10.test
+Simplex solver            mean:       1147266.2 us, stddev:   83639.18 us, count:          5
+
+
+big:
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > big/big_200_200_200.test
+Simplex solver            mean:       1189304.5 us, stddev:   44905.83 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > big/big_400_200_200.test
+Simplex solver            mean:       2299553.4 us, stddev:   32743.08 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > big/big_600_200_200.test
+Simplex solver            mean:       3496674.0 us, stddev:   46048.99 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > big/big_800_200_200.test
+Simplex solver            mean:       4631246.0 us, stddev:   66454.16 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > big/big_1000_200_200.test
+Simplex solver            mean:       7149994.7 us, stddev: 2708256.25 us, count:          5
+
+
+Vary:
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > vary/vary_1000_150_150.test
+Simplex solver            mean:       1362060.0 us, stddev:   85190.85 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > vary/vary_1500_150_150.test
+Simplex solver            mean:       2011235.8 us, stddev:   88890.83 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > vary/vary_2000_150_150.test
+Simplex solver            mean:       2658572.5 us, stddev:  164100.26 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > vary/vary_2500_150_150.test
+Simplex solver            mean:       4884067.2 us, stddev: 3741899.75 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > vary/vary_3000_150_150.test
+Simplex solver            mean:       4625920.4 us, stddev: 1324672.87 us, count:          5
+
+one:
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > one/one_1_1000_1000.test
+Simplex solver            mean:        279878.2 us, stddev:   22847.06 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > one/one_1_2000_2000.test
+Simplex solver            mean:       1681310.9 us, stddev:   58946.81 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > one/one_1_3000_3000.test
+Simplex solver            mean:      13292586.9 us, stddev:  135070.76 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > one/one_1_4000_4000.test
+Simplex solver            mean:      24170798.0 us, stddev:  441561.30 us, count:          5
+
+~/git/pmph/GPU-Simplex/Simplex Instance Generator $ make run > one/one_1_5000_5000.test
+Simplex solver            mean:      38696923.8 us, stddev: 1265139.45 us, count:          5
