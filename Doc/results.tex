@@ -19,7 +19,7 @@ In this test category, we vary the size of the linear program while keeping the 
 	\label{fig:one}
 \end{figure}
 
-As seen in Figure \ref{fig:one}, the cplex version is the fastest implementation across all tested versions. This is expected since it is the current state of the art method, and they might have some optimizations we do not. The outer parallel version executed on the GPU is not shown on the graph, because we were not able to run it on these tests. We encountered an OpenCL error, which might be due to memory allocation of big instances on a single GPU thread. The sequential version is also not shown as it was performing even worse than the others.
+As seen in Figure \ref{fig:one}, the CPLEX version is the fastest implementation across all tested versions. This is expected since it is the current state of the art method, and they might have some optimizations we do not. The outer parallel version executed on the GPU is not shown on the graph, because we were not able to run it on these tests. We encountered an OpenCL error, which might be due to memory allocation of big instances on a single GPU thread. The sequential version is also not shown as it was performing even worse than the others.
 \todo{compare cpu with gpu (with reservations)}
 
 \subsection{Many small instances}
