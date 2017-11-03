@@ -11,7 +11,7 @@ In [Efficient Implementation of the Simplex Method on a CPU-GPU System - 2011] b
 In [Efficient GPU-based implementations of Simplex type algorithms - 2015] by Nikolaos Ploskas and Nikolaos Samaras, GPU-based implementations of the Revised Simplex and Primal Dual Point algorithms showed speedup increases with a factor of up to $181$ compared to a sequential MATLAB implementation.
 
 \subsection{Linear Programming}
-A \textit{linear program} (LP) consists of a set of $n$ \textit{variables} and $m$ \textit{linear constraints}. The LP specifies an objective function which maximizes or minimizes a linear combination of the variables and their coefficients, subject to the $m$ constraints. All variables and constraints must be linear. To formulate precisely:
+A \textit{linear program} (LP) consists of a set of $n$ \textit{variables} and $m$ \textit{linear constraints}. The LP specifies an objective function which maximises or minimises a linear combination of the variables and their coefficients, subject to the $m$ constraints. All variables and constraints must be linear. To formulate precisely:
 
 \begin{alignat*}{3}
 \text{max: } &\sum_{i=1}^{n} c_i x_i\\
@@ -40,13 +40,13 @@ Simplex initiates by formulating each constraint as a new variable. In this form
 x_{n+i}  		&= && b_i - \sum_{j=1}^{n} a_{ij} x_j  &&& \text{ for } i=1,2,...,m
 \end{alignat*}
 
-Simplex iteratively pivots variables to increase the objective value. In a pivot, a non-basic variable called the \textit{entering variable} essentially swaps position with a basic variable called the \textit{leaving variable}. The entering variable is a non-basic variable with a positive objective coefficient, and the leaving variable is based on which constraint is the most binding.
+Simplex consists of a convergence loop, which iteratively pivots variables to increase the objective value. In a pivot, a non-basic variable called the \textit{entering variable} essentially swaps position with a basic variable called the \textit{leaving variable}. The entering variable is a non-basic variable with a positive objective coefficient, and the leaving variable is based on which constraint is the most binding.
 
 After the pivot, the objective value must either increase or stay the same. When it is not possible to pivot any variables without decreasing the objective value, the optimal solution has been found.
 
 \subsubsection{Representation}
 One way to represent the constraints and variables is with vectors and matrices. Since we have $n$ variables, the coefficients of the variables can be encoded in a vector $c$ of length $n$. There are $m$ constants of the constraints which can be encoded into a vector $b$ of length $m$. The constraints can be seen as an $m \times n$-matrix $A$ over every variable and constraint.
-	
+
 \begin{table}[H]
 	\centering
 	\begin{tabular}{|l|l|l|l|l|}

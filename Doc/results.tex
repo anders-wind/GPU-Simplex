@@ -3,10 +3,9 @@
 
 This section contains our benchmarking results as well as a discussion of the results.
 
-For each of the test categories, we measure performance for the three parallel versions, the outer parallel version executed sequentially on the CPU, and the sequential CPLEX java program. We have chosen instance sizes based on what could finish within at most a few minutes on our systems. The programs mentioned in Section \ref{priorwork} were typically tested on larger instances, but with a run-time of 10s of minutes or even hours.
+For each of the test categories, we measure performance for the three parallel versions, the outer parallel version executed sequentially on the CPU, and the sequential CPLEX java program. We have chosen instance sizes based on what could finish within at most a few minutes on our systems. The programs mentioned in Section \ref{priorwork} were typically tested on larger instances, but with a run-time of tens of minutes or even hours.
 
 We plot the times in the same graphs for comparison. Note that comparison between the sequential and parallel versions might not be meaningful since they are executed on different machines and architectures. Additionally, different graphs should not be compared to each other as they use different scales.
-
 
 \subsection{One big instance}
 In this test category, we vary the size of the linear program while keeping the number of instances constant at one.
@@ -40,6 +39,8 @@ In this test category, we vary the number of instances while keeping the sizes w
 As seen on Figure \ref{fig-small} the outer parallel version is the fastest for the largest number of instances. This is expected since it is parallel on the outer dimension, which is the dominant dimension in these test cases. The sequential version is the fastest for fewer than 3000 instances, but it has a more steep upwards slope, indicating that its growth would also exceed the fully parallel version.
 
 Since each instance only requires relatively little work, the inner parallel version performs poorly. The fully parallel version performs well, which is expected since it is also parallel in the outer dimension, but it is clear that the overhead for flattening the nested parallelism makes it slower than the only outer parallel version.
+
+CPLEX performs badly here which is possibly due to the pure overhead in solving a single instance. We also note that the assumptions in our implementations are not present in CPLEX which may also be why there is extra overhead in CPLEX.
 
 \subsection{Many big instances}
 In this test category, we vary the number of instances while keeping the sizes within a constant range of high values.
