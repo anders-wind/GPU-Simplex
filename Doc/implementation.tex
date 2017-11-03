@@ -1,5 +1,8 @@
 % !TeX spellcheck=en_GB
 \section{Implementation}
+
+This section contains a description of our implementation of parallel Multi-Simplex in the GPU-parallel programming language Futhark.
+
 \subsection{Test Instance Generation}
 A Simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. The coefficients and the constraints are random integers between 1 and 100. The constants are random integers between 100 and 500 to make sure the instances do not converge too quickly. Additionally, we ensure that all columns in the constraints matrix contain at least one non-zero variable. This is to ensure that the linear program is not unbounded.
 

@@ -1,6 +1,6 @@
 % !TeX spellcheck=en_GB
 \section{Design}
-\todo{we should have short intros for all sections}
+This section contains an analysis of the scope for parallelisation of Simplex and our design strategy for implementing parallel Simplex.
 
 \subsection{Scope for Parallelism in Simplex}
 The bulk of the work in the Simplex algorithm happens in the convergence loop containing the pivot procedure. By its nature, the convergence loop is unparallelisable since every iteration depends on the previous iteration. However, pivot itself is highly parallel as the values in the new $A'$ matrix and $b'$ and $c'$ vectors are computed independently of each other by only using values from the previous $A$, $b$, and $c$.
