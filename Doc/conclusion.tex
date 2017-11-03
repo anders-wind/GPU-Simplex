@@ -1,7 +1,12 @@
 % !TeX spellcheck=en_GB
 \section{Conclusion}
-We have shown that it is possible to achieve significant speed-up of the simplex algorithm by utilising modern GPU hardware. Our implementations were in all cases faster than the off-the-shelf algorithm\todo{most? update with new runs}, and achieved an up to x\todo{x} factor speed-up. As expected different implementations had different strength and there are trade-offs which must be taken into account when trying to achieve a better utilisation of the parallel hardware. This calls for implementations which dynamically can decide which model to use to obtain the best performance.
+We have shown that it is possible to achieve some speed-up of the Simplex algorithm on multiple instances by utilising modern GPU hardware. For our test cases, our implementations were in most cases faster than the off-the-shelf algorithm. 
 
+\newpar
+As expected, different implementations had different strengths and there are trade-offs which must be taken into account when trying to achieve a better utilisation of the parallel hardware. This calls for implementations which dynamically can decide which model to use to obtain the best performance.
+
+\newpar
+Based on our results, there is also some indication that our parallel programs do not scale well at all with larger program instances. Mostly they scale well with an increase in the number of simultaneous instances solved. For larger problems, the number of iterations needed to solve them may well dominate the gains achieved from solving multiple instances at once. To amortise this cost, we would need to further increase the number of instances which is probably not a viable solution.
+
+\newpar
 Our results show the importance of further work in the area of parallelism across multiple instances, since it is not necessarily possible to fully exploit parallelism when solving an individual instance.
-\todo{Læs herunder chi, det er første paragraph}
-We have shown that it is possible to achieve significant speed-up of the simplex algorithm by utilising modern GPU hardware. Our implementations were in most cases faster than the off-the-shelf algorithm, and achieved a speedup an up to 3 factor speed-up. As expected, different implementations had different strength and there are trade-offs which must be taken into account when trying to achieve a better utilisation of the parallel hardware. This calls for implementations which dynamically can decide which model to use to obtain the best performance.
