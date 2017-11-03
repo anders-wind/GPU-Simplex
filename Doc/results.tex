@@ -3,7 +3,10 @@
 
 This section contains our benchmarking results as well as a discussion of the results.
 
-\todo{introduce graphs, explain seq and par not directly comparable. mention something about choice for data size (limited by size of memory and time taken to generate), mention that graphs are not comparable because they use different scales.}
+For each of the test categories, we measure performance for the three parallel versions, the outer parallel version executed sequentially on the CPU, and the sequential CPLEX java program. We have chosen instance sizes based on what could finish within at most a few minutes on our systems. The programs mentioned in Section \ref{priorwork} were typically tested on larger instances, but with a run-time of 10s of minutes or even hours.
+
+We plot the times in the same graphs for comparison. Note that comparison between the sequential and parallel versions might not be meaningful since they are executed on different machines and architectures. Additionally, different graphs should not be compared to each other as they use different scales.
+
 
 \subsection{One big instance}
 In this test category, we vary the size of the linear program while keeping the number of instances constant at one.

@@ -3,7 +3,7 @@
 
 This section contains a small survey of prior related work in the context of parallel Simplex implementations, as well as the theoretical background for the project.
 
-\subsection{Prior work}
+\subsection{Prior work}\label{priorwork}
 Due to the popularity and importance of linear programming solvers, a lot of research has been done on efficient parallel implementations of Simplex and similar algorithms. In [A Parallel Primal–Dual Simplex Algorithm - 2000] by Diego Klabjan, Ellis L. Johnson, George L. Nemhauser, a multi-computer approach was introduced which solved independent parts of Simplex to decrease the number of iterations required to solve the instances.
 
 In [Efficient Implementation of the Simplex Method on a CPU-GPU System - 2011] by Mohamed Esseghir Lalami, Vincent Boyer, Didier El-Baz, a mix of efficient CPU and CUDA routines were used to obtain a 12.5 times speedup of the Simplex algorithm when compared to a purely CPU-based one.
