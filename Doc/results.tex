@@ -1,22 +1,11 @@
 % !TeX spellcheck=en_GB
-\section{Benchmarks}
+\section{Results}
 
-This section contains our strategy for benchmarking the implementations of Multi-Simplex as well as a discussion of the results.
+This section contains our benchmarking results as well as a discussion of the results.
 
-\subsection{Benchmark Environment}
-To compare to our solution with an off-the-shelf algorithm, the CPLEX framework was chosen, which is developed and maintained by IBM\footnote{\url{http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/index.html}}. It is one of the most used optimization frameworks and can solve both linear and integer linear programs efficiently.
+\todo{introduce graphs, explain seq and par not directly comparable. mention something about choice for data size (limited by size of memory and time taken to generate), mention that graphs are not comparable because they use different scales.}
 
-We tested the GPU implementations on a CentOS 7 Server with an Intel E5-4660 V4 processor, 126 GB memory and with Nvidia GTX 780ti. Both the CPLEX framework and the sequentiel 
-implementation were tested on a Ubuntu 14.04 machine with 8 GB memory and an Intel i5-4200U, due to the fact that we did not have permission to install CPLEX on the server.
-
-\newpar We have chosen to benchmark on four categories of tests which represent instances where different dimensions are the dominant or limited. By doing so, different weaknesses in the implementations can be revealed. First category is one instance where the dimensions of the linear program is large. Second category is many small instances to showcase how well the algorithm handles parallelism across instances. Third category contains many instances of big size to allow for huge parallelism and the fourth category contains many instances of varying size to simulate potential real data which might not always be uniform.
-
-\newpar To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with a GPU and that Futhark and Python are installed.
-
-\subsection{Results}
-\todo{introduce graphs, explain seq and par not directly comparable. mention something about choice for data size.}
-
-\subsubsection{One big instance}
+\subsection{One big instance}
 In this test category, we vary the size of the linear program while keeping the number of instances constant at one.
 
 \begin{figure}[H]
@@ -33,7 +22,7 @@ As seen in Figure \ref{fig:one}, the inner parallel version is the fastest imple
 \todo{compare cpu with gpu (with reservations)}
 \todo{fix da labels}
 
-\subsubsection{Many small instances}
+\subsection{Many small instances}
 
 In this test category, we vary the number of instances while keeping the sizes within a constant range of low values.
 
@@ -50,7 +39,7 @@ As seen on Figure \ref{fig-small} the outer parallel version is the fastest for 
 
 Since each instance only requires relatively little work, the inner parallel version performs poorly. The fully parallel version performs well, which is expected since it is also parallel in the outer dimension, but it is clear that the overhead for flattening the nested parallelism makes it slower than the only outer parallel version.
 
-\subsubsection{Many big instances}
+\subsection{Many big instances}
 In this test category, we vary the number of instances while keeping the sizes within a constant range of high values.
 
 \begin{figure}[H]
@@ -64,7 +53,7 @@ In this test category, we vary the number of instances while keeping the sizes w
 
 As seen in Figure \ref{fig-big} the fully parallel implementation is the fastest. This was expected since it is the implementation with the highest level of parallelism on both dimensions. Since both dimensions are large, it effectively utilises the number of threads to its fullest and the overhead becomes negligible. The inner parallel version does comparatively well since the sizes of the instances allow it to utilise the GPU significantly. The outer parallel version seems to be limited by the time needed to solve each instance.
 
-\subsubsection{Many instances of varying size}
+\subsection{Many instances of varying size}
 In this test category, we vary the number of instances while keeping the sizes within a constant, but broad range of values.
 
 \begin{figure}[H]
