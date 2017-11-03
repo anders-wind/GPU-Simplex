@@ -18,17 +18,22 @@ public class InstanceGenerator {
     private SimplexInstance initializeFormulation(int variableNumber, int constraintNumber) {
 
         int[][] constraints = new int[constraintNumber][variableNumber];
-        int[] initialCoefficients = new int[variableNumber];
-        int[] initialConstants = new int[constraintNumber];
+        int[] coefficients = new int[variableNumber];
+        int[] constants = new int[constraintNumber];
+
+        // since variables are non-negative, they can at most be the value of
+        // the highest constant (which bounds the constraints).
+        // we define constants range below to be 100-500
+        int variableUpperBound = 500;
 
         // Initialize coefficients of the objective function
         for (int i = 0; i < variableNumber; i++) {
-            initialCoefficients[i] = random.nextInt(101);
+            coefficients[i] = random.nextInt(101); // 0-100
         }
 
         // initialize constants of the constraints
         for (int i = 0; i < constraintNumber; i++) {
-            initialConstants[i] = random.nextInt(401)+100; // 100-1001
+            constants[i] = random.nextInt(401)+100; // 100-500
         }
 
         // initialize the coefficients of the constraints
@@ -40,17 +45,18 @@ public class InstanceGenerator {
 
             for (int i = 0; i < constraintNumber; i++) {
 
-                int constraintCoefficient = random.nextInt(101);
+                int constraintCoefficient = random.nextInt(101); // 0-100
                 constraints[i][j] = constraintCoefficient;
                 if (constraintCoefficient != 0) allZero = false;
             }
 
             if (allZero) {
-                int nonzeroCoefficient = random.nextInt(101) + 1;
+                int nonzeroCoefficient = random.nextInt(101) + 1; // 1-100
                 int nonzeroRow = random.nextInt(constraintNumber);
                 constraints[nonzeroRow][j] = nonzeroCoefficient;
             }
         }
-        return new SimplexInstance(constraints, initialConstants, initialCoefficients);
+
+        return new SimplexInstance(constraints, constants, coefficients, variableUpperBound);
     }
 }

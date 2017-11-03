@@ -4,20 +4,31 @@ public class SimplexInstance {
     final int[][] constraints;
     final int[] coefficients;
     final int[] constants;
+    final int variableUpperBound;
+    final int variableLowerBound = 0; // for these instances, vars are always non-negative
     private float expectedObjective;
 
-    SimplexInstance(int[][] constraints, int[] constants, int[] coefficients) {
+    SimplexInstance(int[][] constraints, int[] constants, int[] coefficients, int variableUpperBound) {
         this.constraints = constraints;
         this.coefficients = coefficients;
         this.constants = constants;
+        this.variableUpperBound = variableUpperBound;
     }
 
     public int getVariableNumber(){
         return coefficients.length;
     }
 
-    public int getConstrainNumber(){
+    public int getConstraintNumber() {
         return constants.length;
+    }
+
+    public int getVariableUpperBound() {
+        return variableUpperBound;
+    }
+
+    public int getVariableLowerBound() {
+        return variableLowerBound;
     }
 
     public float getExpectedObjective() {
@@ -79,7 +90,7 @@ public class SimplexInstance {
     public String toString() {
         return String.format("(%d,%d)\n%s\n%s\n%s\n%s",
                 getVariableNumber(),
-                getConstrainNumber(),
+                getConstraintNumber(),
                 constraintsString(false),
                 constantsString(),
                 coefficientsString(),

@@ -7,11 +7,15 @@ public class SimplexSolver {
 
     public float solveSimplex(SimplexInstance instance, Benchmark.Timer timer) {
         float expectedObjective = 0;
-        int variableNumber = instance.getVariableNumber(), constraintNumber = instance.getConstrainNumber();
+        int variableNumber = instance.getVariableNumber();
+        int constraintNumber = instance.getConstraintNumber();
+        int variableUpperBound = instance.getVariableUpperBound();
+        int variableLowerBound = instance.getVariableLowerBound();
         try {
             IloCplex cplex = new IloCplex();
             cplex.setOut(null);
-            IloNumVar[] x =  cplex.numVarArray(variableNumber,0,100);
+            IloNumVar[] x =  cplex.numVarArray(
+                    variableNumber,variableLowerBound,variableUpperBound);
 
             // Add the objective function
             IloLinearNumExpr obj = cplex.linearNumExpr();
