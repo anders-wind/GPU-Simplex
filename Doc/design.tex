@@ -2,48 +2,52 @@
 \section{Design}
 \todo{we should have short intros for all sections}
 
-\subsection{Scope for parallelism in Simplex}
-The bulk of the work in the Simplex algorithm happens in the convergence loop containing the pivot procedure. By its nature, the convergence loop is unparallelisable since every iteration depends on the previous iteration. However, pivot itself is highly parallel as the values in the new $A'$ matrix and $b'$ and $c'$ \todo{make sure this notation is consistent with the theory in the preliminary section} vectors are computed independently of each other by only using values from the previous $A$, $b$, and $c$ (except $c'$, which also depends on $A'$).
+\subsection{Scope for Parallelism in Simplex}
+The bulk of the work in the Simplex algorithm happens in the convergence loop containing the pivot procedure. By its nature, the convergence loop is unparallelisable since every iteration depends on the previous iteration. However, pivot itself is highly parallel as the values in the new $A'$ matrix and $b'$ and $c'$ vectors are computed independently of each other by only using values from the previous $A$, $b$, and $c$.
 
-Nevertheless, the execution time under a parallel pivot will still be dominated by the number of iterations in the convergence loop, which is worst-case exponential in the size of the problem, limiting the potential gain from parallelisation.
+Nevertheless, the execution time under a parallel pivot will still be dominated by the number of iterations in the convergence loop, which is worst-case exponential in the size of the problem. This is the limiting factor for the potential performance gains from parallelisation.
 
-\subsection{Our approach}
+\subsection{Our Approach}
 To get around the hard limit on parallelisation by the convergence loop, our approach is to solve several linear program instances in bulk. The idea is to amortise the convergence time across multiple instances. This approach is hereafter referred to as Multi-Simplex.
 
 In order to explore the effects of parallelism, we implement three versions of the algorithm that exploit different degrees of parallelism: outer parallel across instances, inner parallel across Simplex, and fully parallel across instances and Simplex.
 
-We work from the following pseudocode version of Multi-Simplex:
+We base the sequential Simplex algorithm on the algorithm presented in [Introduction to Algorithms]\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al. The basic Multi-Simplex is shown in pseudocode below.
+
+\begin{figure}[H]
+\label{code:multi-simplex}
 \begin{verbatim}
 Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]):
   map
     (\A b c ->
       e = entering_variable c
       while e != -1:
-        let l = leaving_variaable A b e
-        let (A,b,c,v) = pivot A b c v l e
-        let e = entering_variable c
+        l = leaving_variaable A b e
+        (A,b,c,v) = pivot A b c v e l
+        e = entering_variable c
       return v
     )
     As bs cs
 \end{verbatim}
+\caption{Pseudocode for Multi-Simplex.}
+\end{figure}
+Here \texttt{h} is the number of instances and an instance \texttt{i} is represented by the constraints matrix \texttt{As[i]}, constants vector \texttt{bs[i]}, and coefficients vector \texttt{cs[i]}.
 
-Here \texttt{h} is the number of instances and an instance \texttt{i} is represented by the constraints matrix \texttt{As[i]}, constants vector \texttt{bs[i]}, and objective coefficients vector \texttt{cs[i]}.
-
-\subsubsection{Assumptions and limitations}
+\subsubsection{Assumptions and Limitations}
 We make a number of assumptions about the linear program instances in order to simplify the Simplex algorithm. In particular, we assume the instances:
 \begin{itemize}
-\item \textbf{Are bounded}: an instance is unbounded if its objective value can become arbitrarily large (for a maximisation problem). It is easy to detect this, but we assume all our inputs are well-formed so as to focus on the performance of the bounded case.
-\item \textbf{Are dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representation, e.g. using the Revised Simplex algorithm. However, this also significantly decreases the level of parallelism. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
+\item \textbf{Are bounded}: an instance is unbounded if its objective value can become arbitrarily large (for a maximisation problem).
+\item \textbf{Are dense}: common applications of linear programming are often sparse in the constraints matrix which make them amenable to different representation. However, this also significantly decreases the level of parallelism. We considered a sparse matrix representation, but it was not an entirely natural approach given the regularity of accesses in the original Simplex algorithm.
 \item \textbf{Have an initial feasible basic solution}: instances are not guaranteed to begin in the feasible region and so Simplex typically has an initialisation procedure which ensures this, or reports that the linear program is infeasible. The procedure is similar to Simplex itself, so for simplicity, we exclude it.
 \end{itemize}
 We do \textit{not} assume that Simplex will not cycle, or that the multiple instances are the same size.
 
-The selection of the entering and leaving variables determine how fast the loop converges, but there is no general rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have a useful property: it guarantees that Simplex does not enter a degenerate case and cycles, i.e. the algorithm will eventually terminate.
+The selection of the entering and leaving variables determine how fast the loop converges, but there is no general rule. Typically the leaving variable is selected based on the entering variable, and the entering variable is selected by some heuristic. Our strategy is to always pick the non-basic variable with the smallest index as the entering variable (Bland's rule). This may not ensure the fastest convergence, but it does have the useful property that it guarantees termination of the algorithm, i.e. it avoids cycles.
 
 \subsubsection{Outer Parallel Multi-Simplex}
 In this version, the multiple instances of linear programs are solved in parallel, but each individual instance is solved sequentially. This corresponds to a map over the instances with the Simplex solver as operator. Since only the outer dimension has to be computed in parallel, it is not necessary to flatten the input.
 
-For this type of parallelism to be performant, the number of instances must be near or exceed the number of threads the GPU has to offer, as a small number of instances would not properly exploit the parallelism.
+For this type of parallelism to perform well, the number of instances must be near or exceed the number of threads the GPU has to offer, as a small number of instances would not properly exploit the parallelism.
 
 \subsubsection{Inner Parallel Multi-Simplex}
 In this version, the multiple instances are solved sequentially, but each individual instance is solved in parallel. In particular, this exploits the parallelism of the pivot procedure. The $A$ matrix is updated during pivot and introduces a small amount of nested parallelism. We therefore flatten the $A$ matrix and the nested map operator simply becomes a single map. This is the only change needed to facilitate full parallelism in pivot.
@@ -58,8 +62,8 @@ Due to the flattening, the main algorithm now also needs a shape array for $n$ a
 
 One of the key observations we made was the fact that a lot of the nested parallelism came from the same values. Iotas and other helper arrays were created over the same constant properties which only changed from instance to instance. Therefore most of these arrays can be computed once such that their expensive constant time overhead will be amortized over the iterations of pivots each instance goes through.
 
-The original entering variable and leaving variable methods consisted of a reduces\todo{maybe more} which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong results on the parallel. The problem originated from the fact that the neutral element can be places on both sides of the operator, which we had not taken into consideration and only handled it for the left side. This emphasizes the importance of testing and perhaps using modules for ensuring that operators are indeed parallel.
+The original entering variable and leaving variable methods consisted of a reduce which is now computed on all instances by using segmented scan with the same operator. We had some difficulties with ensuring that the scan operator was truly associative which resulted in getting the correct result when running sequentially but the wrong results in parallel. The problem originated from the fact that the neutral element can be placed on both sides of the operator, which we had not taken into consideration and only handled it for the left side.
 
-Like the parallel simplex on a single instance it is not possible to run the pivots in parallel. This has all the same implications but with the added problem that the number of pivots the threads execute now always corresponds to the one instance with the most pivots. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This problem is mitigated if the level of parallelism does not exceed the thread capacity of the hardware and therefore only becomes a problem on many very large instances.
+Like the inner parallel version, the convergence loop cannot be parallelised. This has all the same implications, but with the added problem that the number of iterations executed now always corresponds to the most expensive instance. This implies that potentially a lot of threads will do busy work on already completed instances while one of the instances is still incomplete. This only becomes a problem if the level of parallelism exceeds the resources of the hardware.
 
 Notes for the versions: thoughts on the amount of scans, transposition for memory coalescing, hoisting shared stuff outside of the loop, the significance of entering and leaving variable.

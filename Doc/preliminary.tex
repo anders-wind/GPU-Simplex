@@ -51,7 +51,7 @@ Given the slack form, Simplex iteratively pivots variables to increase the objec
 After the pivot, the objective value must either increase or stay the same. When it is not possible to pivot any variables without decreasing the objective value, the optimal solution has been found.
 
 \subsubsection{Representation}
-One way to represent the constraints and variables is with vectors and matrices. Since we have $n$ variables, the coefficients of the variables can be encoded in a vector $c$ of length $n$. There are $m$ constants of the constraints which can be encoded into a vector $b$ of length $m$. The constraints can be seen as an $m \times n$-matrix $A$ over every variable and constraint. The sequential Simplex algorithm is based on a version of the algorithm presented in [Introduction to Algorithms]\footnote{Third edition, Chapter 29} by Thomas H. Cormen et al.
+One way to represent the constraints and variables is with vectors and matrices. Since we have $n$ variables, the coefficients of the variables can be encoded in a vector $c$ of length $n$. There are $m$ constants of the constraints which can be encoded into a vector $b$ of length $m$. The constraints can be seen as an $m \times n$-matrix $A$ over every variable and constraint.
 	
 \begin{table}[H]
 	\centering
