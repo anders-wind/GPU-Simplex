@@ -1,20 +1,19 @@
 % !TeX spellcheck=en_GB
 \section{Implementation}
 \subsection{Test Instance Generation}
-A simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. Each value is randomly generated as a float with value between 100 and 500. Afterwards the instance is solved by the off the shelf algorithm to ensure that the solution can be solved and to provide the expected output. 
+A Simplex test instance consists of the coefficient vector, the constraints matrix and the constants vector. The coefficients and the constraints are random integers between 1 and 100. The constants are random integers between 100 and 500 to make sure the instances do not converge too quickly. Additionally, we ensure that all columns in the constraints matrix contain at least one non-zero variable. This is to ensure that the linear program is not unbounded.
 
-The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations.
+Afterwards, the instance is solved by an off-the-shelf algorithm to ensure that the solution can be solved and to provide the expected output. 
 
-To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format. 
+The instance generator can be used to generate multiple instances of different sizes to allow testing how differing dimension lengths and number of instances can influence the running time of the different implementations. Since Futhark does not allow irregular arrays, the test data for the versions that are not fully parallel must be padded with zeroes.
 
-\subsection{Futhark Implementation}
-Outer Parallel Multi-Simplex:
-The implemented solution can be seen in file \texttt{simplex-outer-parallel.fut}.
+To ensure a fair comparison between the implementations, the flattening of the input is precomputed. This resembles the real world use case where data could simply be generated in the correct format.
 
-\newpar
-Inner Parallel Multi-Simplex:
-The implemented solution can be seen in file \texttt{simplex-inner-parallel.fut}.
+\subsection{Futhark Implementations}
+The implementation of outer parallel Multi-Simplex can be seen in file \texttt{simplex-outer-parallel.fut}.
 
 \newpar
-Fully Parallel Multi-Simplex:
-The implemented solution can be seen in file \texttt{simplex-full-parallel.fut}.
+The implementation of inner parallel Multi-Simplex can be seen in file \texttt{simplex-inner-parallel.fut}.
+
+\newpar
+The implementation of fully parallel Multi-Simplex can be seen in file \texttt{simplex-full-parallel.fut}.

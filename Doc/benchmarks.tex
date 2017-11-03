@@ -1,55 +1,38 @@
 % !TeX spellcheck=en_GB
 \section{Benchmarks}
 \subsection{Benchmark Environment}
-To compare to our solution with an off the shelf algorithm, the CPLEX framework was chosen, which is developed and maintained by IBM\footnote{\url{http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/index.html}}. It is available to use for students and faculty for free and is one of the most used optimization frameworks and can solve both linear and integer linear programs very efficiently.
+To compare to our solution with an off-the-shelf algorithm, the CPLEX framework was chosen, which is developed and maintained by IBM\footnote{\url{http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/index.html}}. It is one of the most used optimization frameworks and can solve both linear and integer linear programs efficiently.
 
-We tested the GPU implementations on a CentOS 7 Server with an Intel E5-4660 V4 processor, 126 gb memory and with a Nvidia GTX 780ti. Both the CPLEX framework and the sequentiel 
-implementation were tested on a Ubuntu 14.04 machine with 8 gb memory and an Intel i5-4200U, due to the fact that we did not have the permissions to install CPLEX on the server.
+We tested the GPU implementations on a CentOS 7 Server with an Intel E5-4660 V4 processor, 126 GB memory and with Nvidia GTX 780ti. Both the CPLEX framework and the sequentiel 
+implementation were tested on a Ubuntu 14.04 machine with 8 GB memory and an Intel i5-4200U, due to the fact that we did not have permission to install CPLEX on the server.
 
-To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with an available GPU and that Futhark and Python are installed.
+\newpar We have chosen to benchmark on four categories of tests which represent instances where different dimensions are the dominant or limited. By doing so, different weaknesses in the implementations can be revealed. First category is one instance where the dimensions of the linear program is large. Second category is many small instances to showcase how well the algorithm handles parallelism across instances. Third category contains many instances of big size to allow for huge parallelism and the fourth category contains many instances of varying size to simulate potential real data which might not always be uniform.
 
-We have chosen to benchmark on four categories of tests which represents instances where different dimensions are the dominant or limited. By doing so different weaknesses in the implementations can be revealed. First category is one instance where the dimensions of the linear program is large. Second category is many small instances to showcase how well the algorithm handles parallelism across instances. Third category contains many instances of big size to allow for huge parallelism and the fourth category contains many instances of varying size to simulate potential real data which might not always be uniform.
+\newpar To run all the test categories, all the instance sizes with all the implementations, download \todo{download} and then run \todo{command}. This requires that you run on a machine with a GPU and that Futhark and Python are installed.
 
-\subsection{One big instance}
-\begin{table}[H]
-	\centering
-	\label{table:one-big-instance}
-	\begin{tabular}{|l|l|l|l|l|l|}\hline
-		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-	\end{tabular}
-	\caption{My caption}
-\end{table}
+\subsection{Results}
+\todo{introduce graphs, explain seq and par not directly comparable. mention something about choice for data size.}
+
+\subsubsection{One big instance}
+In this test category, we vary the size of the linear program while keeping the number of instances constant at one.
 
 \begin{figure}[H]
 	\centering
-	\label{fig-vary}
+	\label{fig:one}
 	\includegraphics[width=\textwidth]{one-big}
-	\caption{The average running time of the different implementations, with one instance with highnumber of C and V}
+	\caption{The average running time of the different implementations, with one instance with high number of C and V}
 	\graphicspath{dir-list}
 \end{figure}
-\todo[inline]{Skal opdaters}
 
-As seen table \ref{table:one-big-instance} the reduced-flat is the fastest implementation across all sizes. This is expected since it is fully parallel on each instance while not having as much overhead as the reduced-flat-multi. Slowest of the GPU-parallel versions is the reduced which on a single instance is sequential which is also why we see faster running times of the CPU versions that this one, hence it is only running at the clock speed of the GPU which is significantly slower than the CPU. We also see that while the CPLEX is multi threaded the Futhark C-code is competitive.
+\todo[inline]{Skal opdateres. Note to michael: change c and v to m and n. bigger text on graphs}
 
-\subsection{Many small instances}
-\begin{table}[H]
-	\centering
-	\label{table:many_small_instances}
-	\begin{tabular}{|l|l|l|l|l|l|}\hline
-		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-	\end{tabular}
-	\caption{My caption}
-\end{table}
+As seen in Figure \ref{fig:one}, the inner parallel version is the fastest implementation across all tests. This is expected since it is parallel on an instance while not having as much overhead as the fully parallel version. The outer parallel version executed on the GPU is not shown on the graph, because we were not able to run it on these tests. We encountered an OpenCL error, which might be due to memory allocation of big instances on a single GPU thread.
+\todo{compare cpu with gpu (with reservations)}
+\todo{fix da labels}
+
+\subsubsection{Many small instances}
+
+In this test category, we vary the number of instances while keeping the sizes within a constant range of low values.
 
 \begin{figure}[H]
 	\centering
@@ -59,23 +42,13 @@ As seen table \ref{table:one-big-instance} the reduced-flat is the fastest imple
 	\graphicspath{dir-list}
 \end{figure}
 \todo[inline]{Skal opdaters}
-As seen on table \ref{table:many_small_instances} the reduced version is the fastest. This is expected since it is parallel on the outer dimension which is the dominant dimension in these test cases. Since each instance only require relatively little work the reduced-flat does relatively bad. It waits for each instance to complete before the next starts which also implies that it will transfer the data over to the GPU in multiple stages, increasing the overhead of the algorithm. The reduced-flat-multi does fairly well since it is also parallel in the outer dimension but it is clear that the overhead for flattening the nested parallelism makes it slower than the reduced version. Furthermore it is clear that for a large number of instances the GPU clearly does better than the both of the CPU versions.
 
+As seen on Figure \ref{fig-small} the outer parallel version is the fastest for the largest number of instances. This is expected since it is parallel on the outer dimension, which is the dominant dimension in these test cases. The sequential version is the fastest for fewer than 3000 instances, but it has a more steep upwards slope, indicating that its growth would also exceed the fully parallel version.
 
-\subsection{Many big instances}
-\begin{table}[H]
-	\centering
-	\label{table:many_big_instances}
-	\begin{tabular}{|l|l|l|l|l|l|}\hline
-		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-	\end{tabular}
-	\caption{My caption}
-\end{table}
+Since each instance only requires relatively little work, the inner parallel version performs poorly. The fully parallel version performs well, which is expected since it is also parallel in the outer dimension, but it is clear that the overhead for flattening the nested parallelism makes it slower than the only outer parallel version.
+
+\subsubsection{Many big instances}
+In this test category, we vary the number of instances while keeping the sizes within a constant range of high values.
 
 \begin{figure}[H]
 	\centering
@@ -86,22 +59,10 @@ As seen on table \ref{table:many_small_instances} the reduced version is the fas
 \end{figure}
 \todo[inline]{Skal opdaters}
 
-As seen in table \ref{table:many_big_instances} the reduced-flat-multi implementation is the fastest. This was expected since it is the implementation with the highest level of parallelism on both dimensions. Since both dimensions are large it effectively utilizes the number of threads to its the fullest and the overhead of generating helper arrays becomes negligible. The reduced and reduced-flat does competitively well since both of the dimensions are big and they can utilize the parallelism which also explains wy both of these run faster than the CPU versions.
+As seen in Figure \ref{fig-big} the fully parallel implementation is the fastest. This was expected since it is the implementation with the highest level of parallelism on both dimensions. Since both dimensions are large, it effectively utilises the number of threads to its fullest and the overhead becomes negligible. The inner parallel version does comparatively well since the sizes of the instances allow it to utilise the GPU significantly. The outer parallel version seems to be limited by the time needed to solve each instance.
 
-\subsection{Many instances of varying size}
-\begin{table}[H]
-	\centering
-	\label{table:many_varying_instances}
-	\begin{tabular}{|l|l|l|l|l|l|}\hline
-		Instance & cplex & seq reduced & reduced & reduced-flat & reduced-flat-multi \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                    \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-		&       &             &         &              &                   \\\hline
-	\end{tabular}
-	\caption{My caption}
-\end{table}
+\subsubsection{Many instances of varying size}
+In this test category, we vary the number of instances while keeping the sizes within a constant, but broad range of values.
 
 \begin{figure}[H]
 	\centering
@@ -110,5 +71,7 @@ As seen in table \ref{table:many_big_instances} the reduced-flat-multi implement
 	\caption{The average running time of the different implementations, on different sizes of N with C and V varying a lot.}
 	\graphicspath{dir-list}
 \end{figure}
+
+\todo{parameters in caption}
 \todo[inline]{Skal opdaters}
-As seen in table \ref{table:many_varying_instances} the reduced-flat-multi implementation shows its strength. The implementation is ambiguous on the varying sizes and utilizes this to the fullest. The weakness of the implementations which are parallel on only one dimension, is revealed when the opposite dimension is large and therefore take up time on the GPU where other threads will wait. But while reduced and reduced-flat is a factor x\todo{x} slower than the reduced-flat-multi they still achieve a factor x\todo{x} speed-up from the CPU versions.
+As seen in Figure \ref{fig-vary} the fully parallel version shows its strength. As in the category with many big instances, it is capable of maintaining high GPU utilisation without getting bottlenecked. The inner parallel version also has similar performance to the case with many big instances. This could be because all the arrays are padded and therefore will have size as big as the biggest possible instance. The outer parallel version performs better than in the case with many big instances.
