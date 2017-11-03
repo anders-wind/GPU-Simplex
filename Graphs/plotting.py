@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib
 
+# 0 = inner, 1 = outer, 2 = all, 3 = cplex, 4 = seq
+
 def many_small():
     small = np.genfromtxt('res_small.txt', delimiter=",")
     small = small/1000000
@@ -52,28 +54,28 @@ def many_small2():
     #plt.plot(ns, small[0], 'ro')
     #inner,outer,full,cplex,seq
     #line1, = plt.plot(ns, small[0], 'r')
-    plt.plot(ns, small[1], 'bo')
+    plt.plot(ns, small[1], 'bo')                  #outer
     line2, = plt.plot(ns, small[1], 'b')
-    plt.plot(ns, small[2], 'go')
+    plt.plot(ns, small[2], 'go')                  #all
     line3, = plt.plot(ns, small[2], 'g')
     #plt.plot(ns, small[3], 'yo')
     #line4, = plt.plot(ns, small[3], 'y')
     plt.plot(ns, small[4], 'mo')
-    line5, = plt.plot(ns, small[4], 'm')
+    line5, = plt.plot(ns, small[4], 'm')          #seq
     plt.ylabel('Mean running time in s')
     plt.xlabel('Number of Instances')
     #plt.axes([0, 0.50, 1000, 5000])
-    plt.legend([ line2, line3,line5], ['inner-parallel', 'outer-parallel', 'all-parllel''sequentiel'],loc=2)
+    plt.legend([ line2, line3,line5], ['outer-parallel', 'all-parallel', 'sequential'],loc=2)
 #    plt.xticks(ns)
     plt.title('Average running time on increasing instances with small m and n')
 
     a = plt.axes([0.65, 0.11, .2, .25])
     plt.plot(ns, small[0], 'ro')
-    l1, = plt.plot(ns, small[0], 'r')
+    l1, = plt.plot(ns, small[0], 'r')             # inner
     plt.plot(ns, small[3], 'yo')
-    l2, =plt.plot(ns, small[3], 'y')
+    l2, =plt.plot(ns, small[3], 'y')              # cplex
     plt.plot(ns, small[4], 'mo')
-    l3, = plt.plot(ns, small[4], 'm')
+    l3, = plt.plot(ns, small[4], 'm')             # seq
     plt.plot(ns, small[0], 'r')
     plt.legend([l1,l2,l3], ['inner-parallel', 'cplex', 'sequential'],loc=2)
     plt.xticks([])
@@ -155,7 +157,7 @@ def one_big():
 
 matplotlib.rcParams.update({'font.size': 16})
 
-#many_small()
+##many_small()
 many_small2()
 #many_varying()
 #many_big()
