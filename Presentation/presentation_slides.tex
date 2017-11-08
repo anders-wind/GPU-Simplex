@@ -1,6 +1,6 @@
 % !TeX spellcheck=en_GB
-%\documentclass{beamer}
-\documentclass[handout]{beamer}
+\documentclass{beamer}
+%\documentclass[handout]{beamer}
 \usepackage{etex}
 %% % use this with the [handout] option to create handouts for the audience
 % \usepackage{pgfpages}
@@ -309,17 +309,6 @@ Limitations and obstacles:
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Loop unrolling}
-\centering
-\includegraphics[width=0.9\textwidth]{../Doc/figures/unrolling}
-\begin{itemize}
-	\item Full parallel faster on many small, convergence
-	\item Loop unrolling 5 times gives a time decrease of 20\%
-  \item Loop unrolling 10 times gives roughly the same as 5, but is slower on many small
-\end{itemize}
-\end{frame}
-
 \begin{frame}
 \frametitle{Evaluation (needs some work)}
 \begin{itemize}
@@ -353,14 +342,23 @@ If the convergence loop is our bottleneck, what can we do?
 \end{figure}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Improving the Results}
-An experiment: unrolling some of the loop iterations
 
-Loop unrolling: Futhark double buffer memcpy loop
+\begin{itemize}
+\item Futhark uses \texttt{memcpy} in each loop iteration.
 
-TODO: graph for loop unrolled results
+\item \emph{An experiment}: unrolling the loop to decrease number of \texttt{memcpy}'s.
+\end{itemize}
+\pause
+\centering
+\includegraphics[width=0.9\textwidth]{../Doc/figures/unrolling}
+
+\begin{itemize}
+\item \emph{Result}: 20\% faster when unrolling 5 iterations! {\tiny(for big enough instances)}
+\end{itemize}
 \end{frame}
+
 
 %%%%%%%%%%%%%%
 % CONCLUSION
