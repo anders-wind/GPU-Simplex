@@ -143,29 +143,6 @@
 % INTRO
 %%%%%%%%%%%%%%
 
-\begin{frame}[fragile]
-\frametitle{Futhark test}
-Futhark test
-\pause
-\begin{lstlisting}
-// @emphasis@
-// ¤emphasis2¤
-let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
-  (c : [n]f32) (v : f32) =
-  let e = entering_variable c
-  let (_,_,_,v,_) = loop (A,b,c,v,e) while e != -1 do
-    let l = leaving_variable A b e
-    let (A,b,c,v) = unsafe pivot A b c v l e
-    let e = entering_variable c
-    in (A,b,c,v,e)
-  in v
-
-\end{lstlisting}
-\end{frame}
-
-%%%%%%%%%%%%%%
-% DESIGN
-%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Motivation}
 \begin{itemize}
@@ -178,9 +155,9 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 \begin{frame}
 \frametitle{Focus}
 \begin{itemize}
-	\item Implement fast parallel versions of Simplex.
-	\item Experiment with parallelism across multiple instances of Simplex.
-	\item Benchmark different solutions and compare with 'state of the art' implementation.
+\item Implement fast parallel versions of Simplex.
+\item Experiment with parallelism across multiple instances of Simplex.
+\item Benchmark different solutions and compare with 'state of the art' implementation.
 \end{itemize}
 \end{frame}
 
@@ -188,11 +165,15 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 \begin{frame}
 \frametitle{Simplex}
 \begin{itemize}
-	\item Pivots variables to increasingly increase the objective value.
-	\item After each pivot new constraint matrix, coefficients and constants form the next basis.
-	\item The number of pivots is in worst case exponential and is required to run sequentially.
+\item Pivots variables to increasingly increase the objective value.
+\item After each pivot new constraint matrix, coefficients and constants form the next basis.
+\item The number of pivots is in worst case exponential and is required to run sequentially.
 \end{itemize}
 \end{frame}
+
+%%%%%%%%%%%%%%
+% DESIGN
+%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
 \frametitle{Multi-Simplex}
@@ -324,7 +305,7 @@ Limitations and obstacles:
 \begin{itemize}
 	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
 	\item Fully parallel ambivalent on sizes.
-	\item Compared to many big, instance size is more significant than \#instances
+	\item Instance size is more significant than \#instances
 \end{itemize}
 \end{frame}
 
