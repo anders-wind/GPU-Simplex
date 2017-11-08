@@ -166,6 +166,17 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 % DESIGN
 %%%%%%%%%%%%%%
 
+\begin{frame}
+The three flattened versions.
+\begin{itemize}
+	\item \textbf{Outer parallel}: Instances are computed in parallel. Simplex is not parallelized. Flattening is not needed.
+	
+	\item \textbf{Inner parallel}: Simplex is computed in parallel. Not parallel across instances. Small degree of flattening.
+	
+	\item \textbf{Fully parallel}: Simplex and instances are computed in parallel. High degree of flattening.
+\end{itemize}
+\end{frame}
+
 %%%%%%%%%%%%%%
 % IMPLEMENTATION
 %%%%%%%%%%%%%%
