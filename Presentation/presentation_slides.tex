@@ -166,6 +166,33 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 %%%%%%%%%%%%%%
 % DESIGN
 %%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Motivation}
+\begin{itemize}
+	\item Linear programming is widely used technique for optimization.
+	\item Simplex is the most used algorithm to solve Linear programs.
+	\item To our knowledge there has not been done work on parallelism across multiple instances on massively parallel hardware.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Focus}
+\begin{itemize}
+	\item Implement fast parallel versions of Simplex.
+	\item Experiment with parallelism across multiple instances of Simplex.
+	\item Benchmark different solutions and compare with 'state of the art' implementation.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Simplex}
+\begin{itemize}
+	\item Pivots variables to increasingly increase the objective value.
+	\item After each pivot new constraint matrix, coefficients and constants form the next basis.
+	\item The number of pivots is in worst case exponential and is required to run sequentially.
+\end{itemize}
+\end{frame}
 
 \begin{frame}
 \frametitle{Design}
@@ -268,9 +295,9 @@ Observations:
 \begin{itemize}
 	\item Experiment to clarify for what sizes and what number of instances the fully parallel does better than CPLEX.
 	
-	\item Preprocessing
+	\item Preprocessing.
 	
-	\item Better rules for finding entering and leaving variable.
+	\item Better rules for finding entering and leaving variable. Compute multiple pivots from same basis in parallel and pick best.
 \end{itemize}
 \end{frame}
 \end{document}
