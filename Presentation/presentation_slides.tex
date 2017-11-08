@@ -203,17 +203,17 @@ Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
       v = 0
       e = Entering-Variable(c)
       while (e != -1) do
-        l = Leaving-Variable(A,b,e)
+        @l = Leaving-Variable(A,b,e)
         (A,b,c,v) = Pivot(A,b,c,v,e,l)
-        e = Entering-Variable(c)
+        e = Entering-Variable(c)@
       done
       return v
     )
     As bs cs
 
-Pivot(A[m][n], b[m], c[n], v, e, l) = map, iota
-Leaving-Variable(A[m][n], b[m], e) = map, reduce, iota
-Entering-Variable(c[n]) = reduce, iota
+Entering-Variable(c[n]) = @reduce, iota@
+Leaving-Variable(A[m][n], b[m], e) = @map, reduce, iota@
+Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \end{lstlisting}
 \end{frame}
 
