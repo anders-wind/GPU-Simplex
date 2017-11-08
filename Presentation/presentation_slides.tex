@@ -219,6 +219,7 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 
 \begin{frame}
 \frametitle{Design}
+Implementations:
 \begin{itemize}
 	\item \textbf{Outer parallel}: Instances are computed in parallel. Simplex is not parallelized. Flattening is not needed.
 	
@@ -232,7 +233,7 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \frametitle{Design}
 Observations:
 \begin{itemize}
-	\item In the fully parallel version, the overhead of flattening is amortized over the number of pivots.
+	\item The overhead of flattening is amortized over the number of pivots.
 	
 	\item Each pivot is mostly map operators, minimizing synchronization.
 	
@@ -242,13 +243,13 @@ Observations:
 
 \begin{frame}
 \frametitle{Design}
-Observations:
+Limitations and obstacles:
 \begin{itemize}
-	\item The convergence loop is the hard limit on parallisation. Worst case exponential. 
+	\item The sequential convergence loop is the hard limit on achievable speed-up. Worst case exponential. 
 	
-	\item Busy work when number of pivots differ across instances.
+	\item Large amount of busy work when number of pivots differ across instances.
 	
-	\item other negative things?
+	\item ???
 \end{itemize}
 \end{frame}
 
@@ -290,7 +291,7 @@ Observations:
 \begin{itemize}
 	\item Inner parallel ~15??? times faster than Futhark-c
 	\item Fully parallel is slightly slower than inner. 
-	\item CPLEX algorithmic optimizations
+	\item CPLEX algorithmic optimizations.
 \end{itemize}
 \end{frame}
 
@@ -299,10 +300,10 @@ Observations:
 \centering
 \includegraphics[width=0.85\textwidth]{../Doc/figures/many-small}
 \begin{itemize}
-	\item Outer parallel only faster than Futhark-c for high number of instances.
+	\item Outer parallel only faster than Futhark-c for high number of instances - overhead for starting each instance is significant.
 	\item Fully parallel is slightly slower than outer and sequential. 
 	\item Calculation of simplex is more important than parallelization across instances.
-	\item CPLEX not optimized for solving multiple. Maybe overhead in preprocessing.
+	\item CPLEX not optimized for solving multiple instances. Maybe overhead in preprocessing.
 \end{itemize}
 \end{frame}
 
@@ -323,6 +324,7 @@ Observations:
 \begin{itemize}
 	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
 	\item Fully parallel ambivalent on sizes.
+	\item Compared to many big, instance size is more significant than \#instances
 \end{itemize}
 \end{frame}
 
