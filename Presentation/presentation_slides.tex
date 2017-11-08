@@ -281,11 +281,47 @@ Observations:
 \end{frame}
 
 \begin{frame}
-\frametitle{Number of pivots for the biggest test sets}
-\textbf{Many small instances, M and N between 1 and 10}\\ mean is: 3.772, standard deviation is: 2.630\\
-\textbf{Many varying instances, M and N between 10 and 150}\\ mean is: 77.192, standard deviation is: 53.616\\
-\textbf{Many big instances, M and N between 150 and 200}\\ mean is: 254.283, standard deviation is: 79.926
+\frametitle{Evaluation (needs some work)}
+\begin{itemize}
+\item Outer and fully parallel versions do well for multiple instances
+\item Inner parallel is not much better than fully parallel
+\item For bigger instances, CPLEX seems to scale way better
+\item Something with numbers and x speedup
+\end{itemize}
 \end{frame}
+
+\begin{frame}
+\frametitle{Improving the Results}
+
+If the convergence loop is our bottleneck, what can we do?
+
+\begin{itemize}
+\item Decrease the overhead of an iteration
+\item Decrease the number of iterations ($\leftarrow$ CPLEX!!!)
+\end{itemize}
+
+\begin{figure}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Number of instances} & \textbf{Size range} & \textbf{Mean} & \textbf{Standard deviation} \\\hline
+5000 & 1-10 & 3.772 & 2.630 \\\hline
+3000 & 10-150 & 77.192 & 53.616 \\\hline
+1000 & 150-200 & 254.283 & 79.926 \\\hline
+1 & 5000 & 57994 & 0 \\\hline
+\end{tabular}
+\caption{Mean number of iterations}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Improving the Results}
+An experiment: decreasing the overhead of an iteration
+
+Loop unrolling: Futhark double buffer memcpy loop
+
+TODO: graph for loop unrolled results
+\end{frame}
+
 %%%%%%%%%%%%%%
 % CONCLUSION
 %%%%%%%%%%%%%%
@@ -294,9 +330,7 @@ Observations:
 \frametitle{Further Work}
 \begin{itemize}
 	\item Experiment to clarify for what sizes and what number of instances the fully parallel does better than CPLEX.
-	
-	\item Preprocessing.
-	
+	\item Preprocessing to decrease size and number of iterations
 	\item Better rules for finding entering and leaving variable. Compute multiple pivots from same basis in parallel and pick best.
 \end{itemize}
 \end{frame}
