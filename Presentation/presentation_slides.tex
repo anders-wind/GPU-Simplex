@@ -1,5 +1,6 @@
 %\documentclass{beamer}
 \documentclass[handout]{beamer}
+\usepackage{etex}
 %% % use this with the [handout] option to create handouts for the audience
 % \usepackage{pgfpages}
 % \pgfpagesuselayout{2 on 1}[a4paper,border shrink=5mm]
@@ -127,12 +128,19 @@
 
 \begin{frame}
   \frametitle{Overview}
-
   \begin{itemize}
-  \item First
-  \item Second
+  \item Introduction
+  \item Design
+  \item Implementation
+  \item Design
+  \item Results
+  \item Conclusion
   \end{itemize}
 \end{frame}
+
+%%%%%%%%%%%%%%
+% INTRO
+%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
 \frametitle{Futhark test}
@@ -153,6 +161,22 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 
 \end{lstlisting}
 \end{frame}
+
+%%%%%%%%%%%%%%
+% DESIGN
+%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%
+% IMPLEMENTATION
+%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%
+% RESULTS
+%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%
+% CONCLUSION
+%%%%%%%%%%%%%%
 
 \end{document}
 
