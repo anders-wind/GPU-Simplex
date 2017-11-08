@@ -370,6 +370,17 @@ If the convergence loop is our bottleneck, what can we do?
 	\item Experiment to clarify for what sizes and what number of instances the fully parallel does better than CPLEX.
 	\item Preprocessing to decrease size and number of iterations
 	\item Better rules for finding entering and leaving variable. Compute multiple pivots from same basis in parallel and pick best.
+	\item Implement fully parallel versions of other types of Linear Programming algorithms.
 \end{itemize}
 \end{frame}
+
+\begin{frame}
+\frametitle{Conclusion}
+\begin{itemize}
+	\item We implemented a parallel version which is faster than the state of the art framework when the the number of instances outweighs the sizes of the instances.
+	\item The cost of flattening is minimal compared to the ability to scale well on both \# instances and the instance sizes.
+	\item A lot of possible further research.
+\end{itemize}
+\end{frame}
+
 \end{document}
