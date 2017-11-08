@@ -270,7 +270,7 @@ Limitations and obstacles:
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/one-big-new}
 \begin{itemize}
-	\item Inner parallel ~15??? times faster than Futhark-c
+	\item Inner parallel ~23 times faster than Futhark-c
 	\item Fully parallel is slightly slower than inner. 
 	\item CPLEX algorithmic optimizations.
 \end{itemize}
@@ -284,7 +284,7 @@ Limitations and obstacles:
 	\item Outer parallel only faster than Futhark-c for high number of instances - overhead for starting each instance is significant.
 	\item Fully parallel is slightly slower than outer and sequential. 
 	\item Calculation of simplex is more important than parallelization across instances.
-	\item CPLEX not optimized for solving multiple instances. Maybe overhead in preprocessing.
+	\item CPLEX not optimized for solving multiple instances. Outer parallel ~188 times speed-up.
 \end{itemize}
 \end{frame}
 
@@ -293,7 +293,7 @@ Limitations and obstacles:
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/many-big}
 \begin{itemize}
-	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
+	\item Fully parallel ~7 times faster than Futhark-c and ~3 times faster than CPLEX.
 	\item Sequential code is faster than either parallization on inner or outer only.
 \end{itemize}
 \end{frame}
@@ -303,7 +303,7 @@ Limitations and obstacles:
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/many-varying}
 \begin{itemize}
-	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
+	\item Fully parallel ~8 times faster than sequential and ~4.5 times faster than CPLEX.
 	\item Fully parallel ambivalent on sizes.
 	\item Instance size is more significant than \#instances
 \end{itemize}
