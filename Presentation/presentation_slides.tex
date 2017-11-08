@@ -287,7 +287,7 @@ Limitations and obstacles:
 \begin{frame}[fragile]
 \frametitle{One Big Instance}
 \centering
-\includegraphics[width=0.9\textwidth]{../Doc/figures/one-big}
+\includegraphics[width=0.9\textwidth]{../Doc/figures/one-big-new}
 \begin{itemize}
 	\item Inner parallel ~15??? times faster than Futhark-c
 	\item Fully parallel is slightly slower than inner. 
@@ -325,6 +325,17 @@ Limitations and obstacles:
 	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
 	\item Fully parallel ambivalent on sizes.
 	\item Compared to many big, instance size is more significant than \#instances
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Loop unrolling}
+\centering
+\includegraphics[width=0.9\textwidth]{../Doc/figures/unrolling}
+\begin{itemize}
+	\item Full parallel faster on many small, convergence
+	\item Loop unrolling 5 times gives a time decrease of 20\%
+  \item Loop unrolling 10 times gives roughly the same as 5, but is slower on many small
 \end{itemize}
 \end{frame}
 
