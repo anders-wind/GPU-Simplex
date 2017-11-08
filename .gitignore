@@ -4,6 +4,8 @@
 *-c
 *-opencl
 */bin
+Simplex Instance Generator/out/
+Simplex Instance Generator/.idea/workspace.xml
 
 # Test files
 *actual*
@@ -39,6 +41,11 @@ Futhark/tests/one_big_instance_1_3000_3000.test
 *-blx.aux
 *-blx.bib
 
+## tex beamer files
+*.nav
+*.snm
+*.vrb
+
 ## Build tool auxiliary files:
 *.fdb_latexmk
 *.synctex
@@ -46,5 +53,3 @@ Futhark/tests/one_big_instance_1_3000_3000.test
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
-Simplex Instance Generator/out/
-Simplex Instance Generator/.idea/workspace.xml
