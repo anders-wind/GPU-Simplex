@@ -86,7 +86,7 @@ let leaving_variable [n] [m] (A : [m][n]f32) (b : [m]f32) (e : i32) : i32 =
 let simplex [n] [m] (A : [m][n]f32) (b : [m]f32) (c : [n]f32) (v : f32) =
   let counter = 0
   let e = entering_variable c
-  let (_,_,_,v,_,cnt) = loop (A,b,c,v,e,counter) while e != -1 do
+  let (_,_,_,_,_,cnt) = loop (A,b,c,v,e,counter) while e != -1 do
     let l = leaving_variable A b e
     -- should have a check for if l == -1 here, but it will throw out of
     -- bounds error if not, so that'll do as our "Unbounded" result for now
