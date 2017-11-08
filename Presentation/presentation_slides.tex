@@ -133,7 +133,6 @@
   \item Introduction
   \item Design
   \item Implementation
-  \item Design
   \item Results
   \item Conclusion
   \end{itemize}
@@ -310,12 +309,15 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}
-\frametitle{Evaluation (needs some work)}
+\frametitle{Evaluation}
 \begin{itemize}
-\item Outer and fully parallel versions do well for multiple instances
-\item Inner parallel is not much better than fully parallel
-\item For bigger instances, CPLEX seems to scale way better
-\item Something with numbers and x speedup
+\item Fully parallel combines best of inner and outer parallel.
+\pause
+\item Fully parallel overhead is negligible compared to inner and outer.
+\pause
+\item Iterations needed for convergence is huge bottleneck.
+\pause
+\item CPLEX scales much better with instance size.
 \end{itemize}
 \end{frame}
 
