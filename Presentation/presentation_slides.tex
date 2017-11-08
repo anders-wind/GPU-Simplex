@@ -1,3 +1,4 @@
+% !TeX spellcheck=en_GB
 %\documentclass{beamer}
 \documentclass[handout]{beamer}
 \usepackage{etex}
@@ -167,13 +168,37 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 %%%%%%%%%%%%%%
 
 \begin{frame}
-The three flattened versions.
+\frametitle{Design}
 \begin{itemize}
 	\item \textbf{Outer parallel}: Instances are computed in parallel. Simplex is not parallelized. Flattening is not needed.
 	
 	\item \textbf{Inner parallel}: Simplex is computed in parallel. Not parallel across instances. Small degree of flattening.
 	
 	\item \textbf{Fully parallel}: Simplex and instances are computed in parallel. High degree of flattening.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Design}
+Observations:
+\begin{itemize}
+	\item In the fully parallel version, the overhead of flattening is amortized over the number of pivots.
+	
+	\item Each pivot is mostly map operators, minimizing synchronization.
+	
+	\item other positive things?
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Design}
+Observations:
+\begin{itemize}
+	\item The convergence loop is the hard limit on parallisation. Worst case exponential. 
+	
+	\item Busy work when number of pivots differ across instances.
+	
+	\item other negative things?
 \end{itemize}
 \end{frame}
 
