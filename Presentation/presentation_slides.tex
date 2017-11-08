@@ -262,22 +262,45 @@ Observations:
 %%%%%%%%%%%%%%
 \begin{frame}[fragile]
 \frametitle{One Big Instance}
-\includegraphics[width=\textwidth]{../Doc/figures/one-big}
+\centering
+\includegraphics[width=0.9\textwidth]{../Doc/figures/one-big}
+\begin{itemize}
+	\item Inner parallel ~15??? times faster than Futhark-c
+	\item Fully parallel is slightly slower than inner. 
+	\item CPLEX algorithmic optimizations
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Many Small Instance}
-\includegraphics[width=\textwidth]{../Doc/figures/many-small}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Many Instance of Varying Size}
-\includegraphics[width=\textwidth]{../Doc/figures/many-varying}
+\centering
+\includegraphics[width=0.85\textwidth]{../Doc/figures/many-small}
+\begin{itemize}
+	\item Outer parallel only faster than Futhark-c for high number of instances.
+	\item Fully parallel is slightly slower than outer and sequential. 
+	\item Calculation of simplex is more important than parallelization across instances.
+	\item CPLEX not optimized for solving multiple. Maybe overhead in preprocessing.
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Many Big Instance}
-\includegraphics[width=\textwidth]{../Doc/figures/many-big}
+\centering
+\includegraphics[width=0.9\textwidth]{../Doc/figures/many-big}
+\begin{itemize}
+	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
+	\item Sequential code is faster than either parallization on inner or outer only.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Many Instance of Varying Size}
+\centering
+\includegraphics[width=0.9\textwidth]{../Doc/figures/many-varying}
+\begin{itemize}
+	\item Fully parallel x times faster than sequential and x times faster than CPLEX.
+	\item Fully parallel ambivalent on sizes.
+\end{itemize}
 \end{frame}
 
 \begin{frame}
