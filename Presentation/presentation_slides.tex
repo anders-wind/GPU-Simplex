@@ -180,7 +180,7 @@
 %%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-\frametitle{Introduction}
+\frametitle{Design}
 \framesubtitle{Multi-Simplex}
 \begin{lstlisting}
 Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
@@ -261,9 +261,9 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 	
 	\item \textbf{Many Small Instances}: benchmarks the implementations performance of running Simplex many times where each computation of Simplex is diminished.
 	
-	\item \textbf{Many Big Instances}: benchmarks the implementations performance of running Simplex many times where each iteration of Simplex is significant. 
+	\item \textbf{Many Big Instances}: benchmarks the implementations performance of running Simplex many times where each iteration of Simplex is significant.
 	
-	\item \textbf{Many Varying Instances}: benchmarks the implementations performance of running Simplex over many instances where Simplex might or might not be significant. 
+	\item \textbf{Many Varying Instances}: benchmarks the implementations performance of running Simplex over many instances where Simplex might or might not be significant.
 \end{itemize}
 \end{frame}
 
@@ -276,8 +276,8 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/one-big-new}
 \begin{itemize}
-	\item Inner parallel ~23 times faster than Futhark-c
-	\item Fully parallel is slightly slower than inner. 
+	\item Inner parallel $\sim$23 times faster than sequential (not on graph).
+	\item Fully parallel is slightly slower than inner.
 	\item CPLEX algorithmic optimizations.
 \end{itemize}
 \end{frame}
@@ -288,10 +288,9 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \centering
 \includegraphics[width=0.85\textwidth]{../Doc/figures/many-small}
 \begin{itemize}
-	\item Outer parallel only faster than Futhark-c for high number of instances - overhead for starting each instance is significant.
-	\item Fully parallel is slightly slower than outer and sequential. 
+	\item Outer parallel only faster than sequential for high number of instances - overhead for starting each instance is significant.
 	\item Calculation of simplex is more important than parallelization across instances.
-	\item CPLEX not optimized for solving multiple instances. Outer parallel ~188 times speed-up.
+	\item CPLEX not optimized for solving multiple instances. Outer parallel $\sim$188 times speed-up.
 \end{itemize}
 \end{frame}
 
@@ -301,8 +300,9 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/many-big}
 \begin{itemize}
-	\item Fully parallel ~7 times faster than Futhark-c and ~3 times faster than CPLEX.
-	\item Sequential code is faster than either parallization on inner or outer only.
+	\item Fully parallel $\sim$7 times faster than sequential and $\sim$3 times faster than CPLEX.
+	\item Sequential is faster than both inner and outer.
+	\item Outer scales better than inner.
 \end{itemize}
 \end{frame}
 
@@ -312,9 +312,8 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/many-varying}
 \begin{itemize}
-	\item Fully parallel ~8 times faster than sequential and ~4.5 times faster than CPLEX.
-	\item Fully parallel ambivalent on sizes.
-	\item Instance size is more significant than \#instances
+	\item Fully parallel $\sim$8 times faster than sequential and $\sim$4.5 times faster than CPLEX.
+	\item Fully parallel scales really well.
 \end{itemize}
 \end{frame}
 
@@ -326,7 +325,9 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \pause
 \item Fully parallel overhead is negligible compared to inner and outer.
 \pause
-\item Iterations needed for convergence is huge bottleneck.
+\item Convergence loop is huge bottleneck.
+\pause
+\item Instance size is more significant than \# instances
 \pause
 \item CPLEX scales much better with instance size.
 \end{itemize}
@@ -346,13 +347,12 @@ If the convergence loop is our bottleneck, what can we do?
 \begin{figure}
 \begin{tabular}{|c|c|c|c|c|}
 \hline
-\textbf{Number of instances} & \textbf{Size range} & \textbf{Mean} & \textbf{Standard deviation} \\\hline
-5000 & 1-10 & 3.772 & 2.630 \\\hline
-3000 & 10-150 & 77.192 & 53.616 \\\hline
-1000 & 150-200 & 254.283 & 79.926 \\\hline
+\textbf{Number of instances} & \textbf{Size range} & \textbf{Mean iterations} & \textbf{Std.} \\\hline
+5000 & 1-10 & $\sim 4$ & $\sim 3$ \\\hline
+3000 & 10-150 & $\sim 77$ & $\sim 54$ \\\hline
+1000 & 150-200 & $\sim 254$ & $\sim 80$ \\\hline
 1 & 5000 & 57994 & 0 \\\hline
 \end{tabular}
-\caption{Mean number of iterations}
 \end{figure}
 \end{frame}
 
