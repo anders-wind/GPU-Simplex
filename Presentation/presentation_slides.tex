@@ -143,16 +143,18 @@
 %%%%%%%%%%%%%%
 
 \begin{frame}
-\frametitle{Motivation}
+\frametitle{Introduction}
+\framesubtitle{Motivation}
 \begin{itemize}
 	\item Linear programming is widely used technique for optimization.
-	\item Simplex is the most used algorithm to solve Linear programs.
+	\item Simplex is one of the most used algorithm to solve Linear programs.
 	\item To our knowledge there has not been done work on parallelism across multiple instances on massively parallel hardware.
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Focus}
+\frametitle{Introduction}
+\framesubtitle{Focus}
 \begin{itemize}
 \item Implement fast parallel versions of Simplex.
 \item Experiment with parallelism across multiple instances of Simplex.
@@ -161,11 +163,14 @@
 \end{frame}
 
 
-\begin{frame}
-\frametitle{Simplex}
+\begin{frame}[fragile]
+\frametitle{Introduction}
+\framesubtitle{Simplex}
+\centering
+\includegraphics[height=0.4\textheight]{../Doc/figures/Linear_Programming_Feasible_Region}
 \begin{itemize}
 \item Pivots variables to increasingly increase the objective value.
-\item After each pivot new constraint matrix, coefficients and constants form the next basis.
+\item After each pivot new constraint matrix, coefficients and constants form the next basis in the convergence loop.
 \item The number of pivots is in worst case exponential and is required to run sequentially.
 \end{itemize}
 \end{frame}
@@ -175,7 +180,8 @@
 %%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
-\frametitle{Multi-Simplex}
+\frametitle{Introduction}
+\framesubtitle{Multi-Simplex}
 \begin{lstlisting}
 Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
   map
@@ -199,7 +205,7 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 
 \begin{frame}
 \frametitle{Design}
-Implementations:
+\framesubtitle{Implementations}
 \begin{itemize}
 	\item \textbf{Outer parallel}: Instances are computed in parallel. Simplex is not parallelized. Flattening is not needed.
 	
@@ -211,25 +217,23 @@ Implementations:
 
 \begin{frame}
 \frametitle{Design}
-Observations:
+\framesubtitle{Observations}
 \begin{itemize}
-	\item The overhead of flattening is amortized over the number of pivots.
+	\item The overhead of flattening can be amortized over the number of pivots.
 	
-	\item Each pivot is mostly map operators, minimizing synchronization.
+	\item Iota in pivot can be hoisted outside the convergence loop.
 	
-	\item other positive things?
+	\item Each pivot is then only map operations, minimizing synchronization and work depth.
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Design}
-Limitations and obstacles:
+\framesubtitle{Limitations and obstacles}
 \begin{itemize}
 	\item The sequential convergence loop is the hard limit on achievable speed-up. Worst case exponential. 
 	
 	\item Large amount of busy work when number of pivots differ across instances.
-	
-	\item ???
 \end{itemize}
 \end{frame}
 
@@ -238,7 +242,8 @@ Limitations and obstacles:
 %%%%%%%%%%%%%%
 
 \begin{frame}
-	\frametitle{Test generation}
+	\frametitle{Implementation}
+	\framesubtitle{Test generation}
 	\begin{itemize}
 		\item Parametrized on \#instances, \#variables, \#constraints, range of random values
 		
@@ -249,7 +254,8 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}
-\frametitle{Benchmark categories}
+\frametitle{Implementation}
+\framesubtitle{Benchmark categories}
 \begin{itemize}
 	\item \textbf{One Big Instance}: benchmarks the implementations performance of Simplex.
 	
@@ -265,7 +271,8 @@ Limitations and obstacles:
 % RESULTS
 %%%%%%%%%%%%%%
 \begin{frame}[fragile]
-\frametitle{One Big Instance}
+\frametitle{Results}
+\framesubtitle{One Big Instance}
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/one-big-new}
 \begin{itemize}
@@ -276,7 +283,8 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Many Small Instances}
+\frametitle{Results}
+\framesubtitle{Many Small Instances}
 \centering
 \includegraphics[width=0.85\textwidth]{../Doc/figures/many-small}
 \begin{itemize}
@@ -288,7 +296,8 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Many Big Instances}
+\frametitle{Results}
+\framesubtitle{Many Big Instances}
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/many-big}
 \begin{itemize}
@@ -298,7 +307,8 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Many Instances of Varying Size}
+\frametitle{Results}
+\framesubtitle{Many Instances of Varying Size}
 \centering
 \includegraphics[width=0.9\textwidth]{../Doc/figures/many-varying}
 \begin{itemize}
@@ -309,7 +319,8 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}
-\frametitle{Evaluation}
+\frametitle{Results}
+\framesubtitle{Evaluation}
 \begin{itemize}
 \item Fully parallel combines best of inner and outer parallel.
 \pause
@@ -322,7 +333,8 @@ Limitations and obstacles:
 \end{frame}
 
 \begin{frame}
-\frametitle{Improving the Results}
+\frametitle{Results}
+\framesubtitle{Improving the Results}
 
 If the convergence loop is our bottleneck, what can we do?
 
@@ -345,7 +357,8 @@ If the convergence loop is our bottleneck, what can we do?
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Improving the Results}
+\frametitle{Results}
+\framesubtitle{Unrolling the Loop}
 
 \begin{itemize}
 \item Futhark uses \texttt{memcpy} in each loop iteration.
@@ -367,7 +380,8 @@ If the convergence loop is our bottleneck, what can we do?
 %%%%%%%%%%%%%%
 
 \begin{frame}
-\frametitle{Further Work}
+\frametitle{Conclusion}
+\framesubtitle{Further Work}
 \begin{itemize}
 	\item Experiment to clarify for what sizes and what number of instances the fully parallel does better than CPLEX.
 	\item Preprocessing to decrease size and number of iterations
