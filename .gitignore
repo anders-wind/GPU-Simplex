@@ -33,6 +33,7 @@ Futhark/tests/one_big_instance_1_3000_3000.test
 *.fot
 *.cb
 *.cb2
+*.dvi
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
