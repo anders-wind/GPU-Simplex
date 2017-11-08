@@ -40,7 +40,7 @@
 \definecolor{mygreen}{RGB}{50, 96, 60}
 
 \lstdefinelanguage{Futhark}
-{keywords={fun,if,then,else,loop,do,map,reduce,filter,scan,redomap,transpose,reshape,iota,replicate,let,in,for,while,with,f32,int,zip,streamRed,zipWith, unsafe},%
+{keywords={fun,if,then,else,loop,do,map,reduce,filter,scan,redomap,transpose,reshape,iota,replicate,let,in,for,while,with,f32,int,zip,streamRed,zipWith, unsafe, done, return},% done,return is a hack <- pseudocode not futhark
   sensitive=true,%
   comment=[l]{--},%
   string=[b]",%
@@ -194,6 +194,29 @@ let simplex [n] [m] (A : [m][n]f32) (b : [m]f32)
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Multi-Simplex}
+\begin{lstlisting}
+Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
+  map
+    (\A b c ->
+      v = 0
+      e = Entering-Variable(c)
+      while (e != -1) do
+        l = Leaving-Variable(A,b,e)
+        (A,b,c,v) = Pivot(A,b,c,v,e,l)
+        e = Entering-Variable(c)
+      done
+      return v
+    )
+    As bs cs
+
+Pivot(A[m][n], b[m], c[n], v, e, l) = map, iota
+Leaving-Variable(A[m][n], b[m], e) = map, reduce, iota
+Entering-Variable(c[n]) = reduce, iota
+\end{lstlisting}
+\end{frame}
+
 \begin{frame}
 \frametitle{Design}
 \begin{itemize}
@@ -338,7 +361,7 @@ If the convergence loop is our bottleneck, what can we do?
 
 \begin{frame}
 \frametitle{Improving the Results}
-An experiment: decreasing the overhead of an iteration
+An experiment: unrolling some of the loop iterations
 
 Loop unrolling: Futhark double buffer memcpy loop
 
