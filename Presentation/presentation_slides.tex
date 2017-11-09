@@ -45,7 +45,7 @@
   comment=[l]{--},%
   string=[b]",%
   moredelim=**[is][\color{red}]{@}{@},
-  moredelim=**[is][\color{blue}]{¤}{¤},
+  moredelim=**[is][\color{structure}]{¤}{¤},
 }
 
 \lstset{
@@ -145,33 +145,42 @@
 \begin{frame}
 \frametitle{Introduction}
 \framesubtitle{Motivation}
+\centering
+{\Large What problem are we trying to solve?}
+
 \begin{itemize}
-	\item Linear programming is widely used technique for optimization.
-	\item Simplex is one of the most used algorithm to solve Linear programs.
-	\item To our knowledge there has not been done work on parallelism across multiple instances on massively parallel hardware.
+	\item Linear programming models optimisation problems.
+	\item Simplex is an algorithm for solving linear programs.
+	\item There have been attempts to parallelise Simplex ...
+	\pause
+	\item ... but never across multiple linear programs. {\tiny (to our knowledge)}
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Introduction}
 \framesubtitle{Focus}
+\centering
+{\Large What is the scope of this project?}
+
 \begin{itemize}
-\item Implement fast parallel versions of Simplex.
-\item Experiment with parallelism across multiple instances of Simplex.
-\item Benchmark different solutions and compare with 'state of the art' implementation.
+\item Implement parallel versions of Simplex.
+\item Experiment with parallelism across multiple dimensions.
+\item Benchmark our programs and compare with 'state of the art' implementation, CPLEX.
 \end{itemize}
 \end{frame}
-
 
 \begin{frame}[fragile]
 \frametitle{Introduction}
 \framesubtitle{Simplex}
 \centering
-\includegraphics[height=0.4\textheight]{../Doc/figures/Linear_Programming_Feasible_Region}
+{\Large What does Simplex do?}
+
 \begin{itemize}
-\item Pivots variables to increasingly increase the objective value.
-\item After each pivot new constraint matrix, coefficients and constants form the next basis in the convergence loop.
-\item The number of pivots is in worst case exponential and is required to run sequentially.
+\item Goal is to optimise a linear function of $n$ variables, subject to $m$ linear constraints.
+\item Simplex consists of a convergence loop in which we \emph{pivot}.
+\item The \emph{pivot} updates an $m \times n$ matrix $A$, an $m$-vector $b$, and an $n$-vector $c$.
+\item Number of pivots before convergence is worst case exponential.
 \end{itemize}
 \end{frame}
 
@@ -183,24 +192,26 @@
 \frametitle{Design}
 \framesubtitle{Multi-Simplex}
 \begin{lstlisting}
-Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
-  map
-    (\A b c ->
-      v = 0
-      e = Entering-Variable(c)
-      while (e != -1) do
-        @l = Leaving-Variable(A,b,e)
-        (A,b,c,v) = Pivot(A,b,c,v,e,l)
-        e = Entering-Variable(c)@
-      done
-      return v
-    )
-    As bs cs
+Entering-Variable(c[n]) = ¤reduce, iota¤
+Leaving-Variable(A[m][n], b[m], e) = ¤map, reduce, iota¤
+Pivot(A[m][n], b[m], c[n], v, e, l) = ¤map, iota¤
 
-Entering-Variable(c[n]) = @reduce, iota@
-Leaving-Variable(A[m][n], b[m], e) = @map, reduce, iota@
-Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
+Simplex(A[m][n], b[m], c[n]) =
+  v = 0
+  e = Entering-Variable(c)
+  while (e != -1) do
+    ¤l = Leaving-Variable(A,b,e)
+    (A,b,c,v) = Pivot(A,b,c,v,e,l)
+    e = Entering-Variable(c)¤
+  done
+  return v
 \end{lstlisting}
+\pause
+\begin{lstlisting}
+Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
+  map Simplex As bs cs
+\end{lstlisting}
+\empr{Amortise convergence loop across multiple instances!}
 \end{frame}
 
 \begin{frame}
@@ -322,34 +333,37 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{Evaluation}
+\centering
+{\Large What did we learn?}
+
 \begin{itemize}
 \item Fully parallel combines best of inner and outer parallel.
-\pause
 \item Fully parallel overhead is negligible compared to inner and outer.
 \pause
 \item Convergence loop is huge bottleneck.
-\pause
 \item Instance size is more significant than \# instances
-\pause
 \item CPLEX scales much better with instance size.
 \end{itemize}
+
+%For extreme cases, we have inner and outer perform best. But they are terrible when their own parallel dimension is not used. Fully parallel is never far behind and works well on both extremes. EXCEPT for one big.
 \end{frame}
 
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{Improving the Results}
-
 If the convergence loop is our bottleneck, what can we do?
 
 \begin{itemize}
-\item Decrease the overhead of an iteration
-\item Decrease the number of iterations ($\leftarrow$ CPLEX!!!)
+\item Decrease overhead of an iteration {\tiny($\leftarrow$ CPLEX, probably)}
+\item Decrease number of iterations {\tiny($\leftarrow$ also CPLEX)}
 \end{itemize}
 
+\pause
+How many iterations are actually needed?
 \begin{figure}
 \begin{tabular}{|c|c|c|c|c|}
 \hline
-\textbf{Number of instances} & \textbf{Size range} & \textbf{Mean iterations} & \textbf{Std.} \\\hline
+\emph{\textbf{Number of instances}} & \emph{\textbf{Size range}} & \emph{\textbf{Mean iterations}} & \emph{\textbf{Std.}} \\\hline
 5000 & 1-10 & $\sim 4$ & $\sim 3$ \\\hline
 3000 & 10-150 & $\sim 77$ & $\sim 54$ \\\hline
 1000 & 150-200 & $\sim 254$ & $\sim 80$ \\\hline
@@ -360,20 +374,18 @@ If the convergence loop is our bottleneck, what can we do?
 
 \begin{frame}[fragile]
 \frametitle{Results}
-\framesubtitle{Unrolling the Loop}
-
-\begin{itemize}
-\item Futhark uses \texttt{memcpy} in each loop iteration.
-
-\item \emph{An experiment}: unrolling the loop to decrease number of \texttt{memcpy}'s.
-\end{itemize}
-\pause
+\framesubtitle{Improving the Results}
 \centering
+Futhark uses \texttt{memcpy} in each loop iteration.
+
+An experiment: unroll loop to decrease number of \texttt{memcpy}'s.
+
+\pause
+
 \includegraphics[width=0.9\textwidth]{../Doc/figures/unrolling}
 
-\begin{itemize}
-\item \emph{Result}: 20\% faster when unrolling 5 iterations! {\tiny(for big enough instances)}
-\end{itemize}
+ \empr{Result: 20\% faster when unrolling 5 iterations! {\tiny(for big enough instances)}}
+
 \end{frame}
 
 
@@ -389,6 +401,7 @@ If the convergence loop is our bottleneck, what can we do?
 	\item Preprocessing to decrease size and number of iterations
 	\item Better rules for finding entering and leaving variable. Compute multiple pivots from same basis in parallel and pick best.
 	\item Implement fully parallel versions of other types of Linear Programming algorithms.
+	\item Investigate Futhark implementation to identify spots with unnecessary overhead (e.g. data copying).
 \end{itemize}
 \end{frame}
 
