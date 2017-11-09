@@ -302,7 +302,7 @@ Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
 \includegraphics[width=0.85\textwidth]{../Doc/figures/many-small-in-one}
 \begin{itemize}
 	\item Outer parallel only faster than sequential for high number of instances - overhead for starting each instance is significant.
-	\item Calculation of simplex is more important than parallelization across instances.
+	\item Overhead of starting Simplex is more significant than actually solving Simplex.
 	\item CPLEX not optimized for solving multiple instances. Outer parallel $\sim$188 times speed-up.
 \end{itemize}
 \end{frame}
