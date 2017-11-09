@@ -221,7 +221,9 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 \begin{itemize}
 	\item The sequential convergence loop is the hard limit on achievable speed-up. Worst case exponential. 
 	
-	\item Large amount of busy work when number of pivots differ across instances.
+	\item Flattening overhead inside convergence loop.
+	
+	\item Low level of thread utilization when number of pivots differ across instances.
 \end{itemize}
 \end{frame}
 
@@ -245,7 +247,7 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 	\frametitle{Implementation}
 	\framesubtitle{Test generation}
 	\begin{itemize}
-		\item Parametrized on \#instances, \#variables, \#constraints, range of random values
+		\item Parametrized on \#instances, \#variables, \#constraints. constant range of random values
 		
 		\item Each parameter affects the running time significantly. The significance of values is not immediately obvious.
 		
