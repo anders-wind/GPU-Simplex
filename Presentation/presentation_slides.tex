@@ -258,7 +258,7 @@ Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
 	\frametitle{Implementation}
 	\framesubtitle{Test generation}
 	\begin{itemize}
-		\item Parametrized on \#instances, \#variables, \#constraints. constant range of random values
+		\item Parametrized on \#instances, \#variables, \#constraints. Fixed range of random values
 		
 		\item Each parameter affects the running time significantly. The significance of values is not immediately obvious.
 		
@@ -299,7 +299,7 @@ Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
 \frametitle{Results}
 \framesubtitle{Many Small Instances}
 \centering
-\includegraphics[width=0.85\textwidth]{../Doc/figures/many-small}
+\includegraphics[width=0.85\textwidth]{../Doc/figures/many-small-in-one}
 \begin{itemize}
 	\item Outer parallel only faster than sequential for high number of instances - overhead for starting each instance is significant.
 	\item Calculation of simplex is more important than parallelization across instances.
