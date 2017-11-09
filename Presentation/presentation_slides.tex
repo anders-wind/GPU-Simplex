@@ -217,6 +217,16 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 
 \begin{frame}
 \frametitle{Design}
+\framesubtitle{Limitations and obstacles}
+\begin{itemize}
+	\item The sequential convergence loop is the hard limit on achievable speed-up. Worst case exponential. 
+	
+	\item Large amount of busy work when number of pivots differ across instances.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Design}
 \framesubtitle{Observations}
 \begin{itemize}
 	\item The overhead of flattening can be amortized over the number of pivots.
@@ -224,16 +234,6 @@ Pivot(A[m][n], b[m], c[n], v, e, l) = @map, iota@
 	\item Iota in pivot can be hoisted outside the convergence loop.
 	
 	\item Each pivot is then only map operations, minimizing synchronization and work depth.
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Design}
-\framesubtitle{Limitations and obstacles}
-\begin{itemize}
-	\item The sequential convergence loop is the hard limit on achievable speed-up. Worst case exponential. 
-	
-	\item Large amount of busy work when number of pivots differ across instances.
 \end{itemize}
 \end{frame}
 
