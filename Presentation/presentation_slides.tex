@@ -242,9 +242,9 @@ Multi-Simplex(As[h][m][n], bs[h][m], cs[h][n]) =
 \frametitle{Design}
 \framesubtitle{Observations}
 \begin{itemize}
-	\item The overhead of flattening can be amortized over the number of pivots.
+	\item The convergence loop gets amortized over the number of instances.
 	
-	\item Iota in pivot can be hoisted outside the convergence loop.
+	\item Iota is amortized over the convergence loop since it can be hoisted outside.
 	
 	\item Each pivot is then only map operations, minimizing synchronization and work depth.
 \end{itemize}
